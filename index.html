@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhúng Thiết Kế Canva</title>
+    <style>
+        /* Định dạng nút */
+        .button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        /* Định dạng các nút mũi tên */
+        .next-button, .prev-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: #9b9b9b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px; /* Tăng kích thước mũi tên */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 2px 2px 10px rgba(94, 94, 94, 0.3);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .next-button:hover, .prev-button:hover {
+            background-color: white;
+            color: rgb(104, 104, 104);
+        }
+
+        /* Nút tiếp theo bên phải */
+        .next-button {
+            right: 10px;
+        }
+
+        /* Nút quay lại bên trái */
+        .prev-button {
+            left: 10px;
+        }
+
+        /* Tối ưu cho màn hình máy tính */
+        @media (min-width: 1025px) {
+            .iframe-container {
+                width: 800px; /* Đảm bảo iframe có kích thước cố định trên máy tính */
+                height: 600px;
+            }
+            /* Mũi tên trái và phải */
+.next-button::before {
+    content: ">"; /* Mũi tên phải */
+    font-size: 35px;
+}
+
+.prev-button::before {
+    content: "<"; /* Mũi tên trái */
+    font-size: 35px;
+}
+            .next-button, .prev-button {
+                font-size: 24px; /* Kích thước nút lớn hơn cho máy tính */
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        /* Tối ưu cho iPad và máy tính bảng */
+        @media (max-width: 1024px) {
+            .iframe-container {
+                width: 90%; /* Điều chỉnh cho phù hợp với iPad */
+                height: 70vh;
+            }
+
+            .next-button, .prev-button {
+                font-size: 20px; /* Giảm kích thước nút cho iPad */
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        /* Tối ưu cho điện thoại di động */
+        @media (max-width: 768px) {
+            .iframe-container {
+                width: 90%; /* Điều chỉnh chiều rộng iframe cho điện thoại */
+                height: 50vh; /* Giảm chiều cao cho điện thoại */
+            }
+    /* Hiển thị nút ở bên trái và bên phải của iframe */
+           /* Định dạng các nút mũi tên */
+.next-button, .prev-button {
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+    bottom: 20px;
+    top: 150px;
+    position: absolute;
+    z-index: 10;
+    background-color: #000;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    animation: zoomEffect 3s ease-in-out infinite; /* Thêm hiệu ứng zoom tự động */
+}
+
+/* Nút tiếp theo bên phải */
+.next-button {
+    right: 5%;
+}
+
+/* Nút quay lại bên trái */
+.prev-button {
+    left: 5%;
+}
+
+/* Mũi tên trái và phải */
+.next-button::before {
+    content: ">"; /* Mũi tên phải */
+    font-size: 20px;
+}
+
+.prev-button::before {
+    content: "<"; /* Mũi tên trái */
+    font-size: 20px;
+}
+
+/* Hiệu ứng zoom tự động */
+@keyframes zoomEffect {
+    0% {
+        transform: scale(1); /* Kích thước ban đầu */
+    }
+    50% {
+        transform: scale(1.1); /* Phóng to 10% */
+    }
+    100% {
+        transform: scale(1); /* Trở về kích thước ban đầu */
+    }
+}
+
+/* Hiệu ứng hover cho các nút */
+.next-button:hover, .prev-button:hover {
+    background-color: white; /* Màu nền thành trắng khi hover */
+    color: black; /* Màu chữ thành đen khi hover */
+    transform: scale(1.1); /* Tăng kích thước nút khi hover */
+}
+}
+
+
+    </style>
+</head>
+<body>
+    <div style="position: relative; width: 100%; height: 0; padding-top: 70.7071%;
+    padding-bottom: 0; box-shadow: 0 2px 8px 0 rgba(63,69,81,0.16); margin-top: 1.6em; margin-bottom: 0.9em; overflow: hidden;
+    border-radius: 8px; will-change: transform;">
+        <iframe id="iframe1" loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0;margin: 0;"
+        src="https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed" allowfullscreen="allowfullscreen" allow="fullscreen">
+        </iframe>
+    </div>
+    
+   <!-- Nút nhấn để chuyển sang mặt thiệp mời thứ 2 -->
+    <button class="next-button" onclick="switchToSecondPage()"></button>
+
+    <!-- Nút nhấn để quay lại mặt thiệp mời thứ 1 -->
+    <button class="prev-button" onclick="switchToFirstPage()"></button>
+
+    <script>
+        function switchToSecondPage() {
+            var iframe = document.getElementById("iframe1");
+            iframe.src = "https://www.canva.com/design/DAGzUDV-HjQ/21minuCM_u54x-7zSqFogA/view?embed"; // URL của mặt thiệp mời thứ 2
+        }
+
+        function switchToFirstPage() {
+            var iframe = document.getElementById("iframe1");
+            iframe.src = "https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed"; // URL của mặt thiệp mời thứ 1
+        }
+    </script>
+</body>
+</html>
