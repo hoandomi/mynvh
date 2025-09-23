@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>15 năm Phucbinh Group</title>
-  <link rel="icon" href="/logo1.png" type="image/png">
+  <link rel="icon" href="/logo1.png" type="image/png" sizes="500x500">
+
   <style>
     /* Ẩn/hiện 2 layout theo kích thước */
     .desktop-layout { display: none; }
@@ -17,141 +18,115 @@
       .mobile-layout { display: block; }
     }
 
-    /* ====== STYLE CHO DESKTOP FULL MÀN ====== */
+    /* ====== DESKTOP ====== */
     .desktop-layout .iframe-wrap {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      border-radius: 0;
-      box-shadow: none;
-      z-index: 1;
+      position: fixed; inset: 0;
+      width: 100vw; height: 100vh;
+      margin: 0; padding: 0; border-radius: 0; box-shadow: none; z-index: 1;
     }
-    .desktop-layout iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    .desktop-layout iframe { width: 100%; height: 100%; border: none; }
 
-    /* ==== DESKTOP BUTTON ==== */
     .desktop-layout .next-button,
     .desktop-layout .prev-button {
-      position: fixed;
-      top: 50%;
+      position: fixed; top: 50%;
       transform: translateY(-50%) scale(1);
-      width: 80px;
-      height: 80px;
-      background-color: #9b9b9b;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 35px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 2px 2px 10px rgba(94, 94, 94, 0.3);
+      width: 80px; height: 80px;
+      background-color: #9b9b9b; color: #fff;
+      border: none; border-radius: 50%;
+      font-size: 35px; display: flex; justify-content: center; align-items: center;
+      cursor: pointer; box-shadow: 2px 2px 10px rgba(94,94,94,0.3);
       transition: background-color 0.3s, color 0.3s, transform 0.2s ease;
       z-index: 10;
     }
     .desktop-layout .next-button:hover,
     .desktop-layout .prev-button:hover {
-      background-color: white;
-      color: rgb(104, 104, 104);
-      transform: translateY(-50%) scale(0.9); /* hover nhỏ lại */
+      background-color: #fff; color: rgb(104,104,104);
+      transform: translateY(-50%) scale(0.9);
     }
     .desktop-layout .next-button { right: 20px; }
     .desktop-layout .prev-button { left: 20px; }
 
-    /* ====== STYLE CHO MOBILE ====== */
-    .mobile-layout *, .mobile-layout body { box-sizing: border-box; }
-    .mobile-layout .slider-container {
-      position: relative;
-      width: 100%;
-      max-width: 800px;
-      margin: auto;
-      height: 0;
-      padding-top: 141.8919%;
-      overflow: hidden;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .mobile-layout .slider-wrapper {
-      position: absolute;
-      top: 0; left: 0;
-      width: 200%;
-      height: 100%;
-      display: flex;
-      transition: transform 0.6s ease-in-out;
-    }
-    .mobile-layout .slide { width: 50%; height: 100%; }
-    .mobile-layout iframe { width: 100%; height: 100%; border: none; }
+    /* ====== MOBILE FULL-SCREEN ====== */
+    @media (max-width: 1024px) {
+      html, body { height: 100%; width: 100%; margin: 0; }
+      body { overflow: hidden; } /* tránh cuộn khi full-bleed */
 
-    /* ==== MOBILE BUTTON ==== */
-    .mobile-layout .button {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%) scale(1);
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 10;
-      transition: transform 0.2s ease, background 0.3s, color 0.3s;
+      .mobile-layout {
+        width: 100vw; height: 100vh;
+        margin: 0; background: #000;
+      }
+
+      .mobile-layout .slider-container {
+        position: relative;
+        width: 100vw; height: 100vh; /* full màn hình */
+        max-width: none; margin: 0; padding-top: 0;
+        border-radius: 0; box-shadow: none; overflow: hidden;
+      }
+
+      .mobile-layout .slider-wrapper {
+        position: absolute; inset: 0;
+        width: 200%; height: 100%;
+        display: flex; transition: transform 0.6s ease-in-out;
+      }
+
+      .mobile-layout .slide { width: 50%; height: 100%; position: relative; }
+      .mobile-layout iframe {
+        position: absolute; inset: 0; width: 100%; height: 100%; border: none;
+      }
+
+      /* Nút điều hướng (to hơn) */
+      .mobile-layout .button {
+        position: absolute; top: 50%;
+        transform: translateY(-50%) scale(1);
+        background: rgba(0,0,0,0.6); color: #fff;
+        border: none; border-radius: 50%;
+        width: 40px; height: 40px; font-size: 28px;
+        cursor: pointer; z-index: 10;
+        transition: transform 0.2s ease, background 0.3s, color 0.3s;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+      .mobile-layout .button:hover {
+        background: #fff; color: #000;
+        transform: translateY(-50%) scale(0.9);
+      }
+      .mobile-layout .button:active { transform: translateY(-50%) scale(0.9); }
+      .mobile-layout .next-button { right: max(10px, env(safe-area-inset-right)); }
+      .mobile-layout .prev-button { left:  max(10px, env(safe-area-inset-left)); }
     }
-    .mobile-layout .button:hover {
-      background: white;
-      color: black;
-      transform: translateY(-50%) scale(0.9); /* hover trên thiết bị có chuột */
-    }
-    .mobile-layout .button:active {
-      transform: translateY(-50%) scale(0.9); /* chạm giữ trên mobile */
-    }
-    .mobile-layout .next-button { right: 10px; }
-    .mobile-layout .prev-button { left: 10px; }
   </style>
 </head>
+
 <body style="margin:0; font-family: Arial, sans-serif; background:#f0f0f0;">
 
-  <!-- ================= DESKTOP: code1 full màn ================= -->
+  <!-- ===== DESKTOP ===== -->
   <div class="desktop-layout">
     <div class="iframe-wrap">
       <iframe id="iframe1"
         src="https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed"
-        allowfullscreen="allowfullscreen" allow="fullscreen">
-      </iframe>
-      <!-- Prev = RELOAD -->
+        allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
+
+      <!-- Prev = RELOAD | Next = sang trang 2 -->
       <button class="prev-button" onclick="reloadPage()">&#10094;</button>
-      <!-- Next = chuyển sang trang 2 -->
       <button class="next-button" onclick="switchToSecondPageDesktop()">&#10095;</button>
     </div>
   </div>
 
-  <!-- ================= MOBILE: code2 ================= -->
+  <!-- ===== MOBILE (full-screen) ===== -->
   <div class="mobile-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderMobile">
         <!-- Trang 1 -->
         <div class="slide">
-          <div style="position: relative; width: 100%; height: 100%;">
-            <iframe loading="lazy"
-              src="https://www.canva.com/design/DAGzwjlhbkY/sqzzrSpc9YIbmPEh30_Hew/view?embed"
-              allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
-          </div>
+          <iframe loading="lazy"
+            src="https://www.canva.com/design/DAGzwjlhbkY/sqzzrSpc9YIbmPEh30_Hew/view?embed"
+            allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
-          <div style="position: relative; width: 100%; height: 100%;">
-            <iframe loading="lazy"
-              src="https://www.canva.com/design/DAGzwg0_J_U/15AS0SHxEl1Q0ol0FDnK9Q/view?embed"
-              allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
-          </div>
+          <iframe loading="lazy"
+            src="https://www.canva.com/design/DAGzwg0_J_U/15AS0SHxEl1Q0ol0FDnK9Q/view?embed"
+            allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
         </div>
       </div>
 
@@ -176,13 +151,9 @@
     }
 
     /* ==== RELOAD dùng chung cho PC & Mobile ==== */
-    function reloadPage() {
-      location.reload();
-    }
-  </script>
+    function reloadPage() { location.reload(); }
 
-  <script>
-    // Hiệu ứng thu nhỏ khi chạm trên mobile (mô phỏng hover)
+    /* ==== Mô phỏng hover khi chạm trên mobile ==== */
     document.querySelectorAll('.mobile-layout .button').forEach(btn => {
       btn.addEventListener('touchstart', () => {
         btn.style.transform = 'translateY(-50%) scale(0.9)';
@@ -198,4 +169,3 @@
 
 </body>
 </html>
-
