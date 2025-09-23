@@ -7,28 +7,36 @@
   <link rel="icon" href="https://phucbinh.com.vn/wp-content/uploads/2023/03/cropped-Group-8-180x180.png" type="image/png" sizes="500x500">
 
   <style>
-    /* Ẩn/hiện 2 layout theo kích thước */
+    /* Ẩn/hiện layout */
     .desktop-layout { display: none; }
     .mobile-layout  { display: none; }
 
-    @media (min-width: 1025px) {
-      .desktop-layout { display: block; }
-    }
-    @media (max-width: 1024px) {
-      .mobile-layout { display: block; }
-    }
+    @media (min-width: 1025px) { .desktop-layout { display: block; } }
+    @media (max-width: 1024px) { .mobile-layout { display: block; } }
 
-    /* ====== DESKTOP ====== */
-    .desktop-layout .iframe-wrap {
-      position: fixed; inset: 0;
+    /* ===== DESKTOP (slider) ===== */
+    .desktop-layout .slider-container {
+      position: relative;
       width: 100vw; height: 100vh;
-      margin: 0; padding: 0; border-radius: 0; box-shadow: none; z-index: 1;
+      overflow: hidden;
     }
-    .desktop-layout iframe { width: 100%; height: 100%; border: none; }
+    .desktop-layout .slider-wrapper {
+      display: flex;
+      width: 200%; height: 100%;
+      transition: transform 0.6s ease-in-out;
+    }
+    .desktop-layout .slide {
+      width: 50%; height: 100%;
+      position: relative;
+    }
+    .desktop-layout iframe {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; border: none;
+    }
 
     .desktop-layout .next-button,
     .desktop-layout .prev-button {
-      position: fixed; top: 50%;
+      position: absolute; top: 50%;
       transform: translateY(-50%) scale(1);
       width: 80px; height: 80px;
       background-color: #9b9b9b; color: #fff;
@@ -46,10 +54,10 @@
     .desktop-layout .next-button { right: 20px; }
     .desktop-layout .prev-button { left: 20px; }
 
-    /* ====== MOBILE FULL-SCREEN ====== */
+    /* ===== MOBILE ===== */
     @media (max-width: 1024px) {
       html, body { height: 100%; width: 100%; margin: 0; }
-      body { overflow: hidden; } /* tránh cuộn khi full-bleed */
+      body { overflow: hidden; }
 
       .mobile-layout {
         width: 100vw; height: 100vh;
@@ -58,15 +66,14 @@
 
       .mobile-layout .slider-container {
         position: relative;
-        width: 100vw; height: 100vh; /* full màn hình */
-        max-width: none; margin: 0; padding-top: 0;
-        border-radius: 0; box-shadow: none; overflow: hidden;
+        width: 100vw; height: 100vh;
+        overflow: hidden;
       }
 
       .mobile-layout .slider-wrapper {
-        position: absolute; inset: 0;
+        display: flex;
         width: 200%; height: 100%;
-        display: flex; transition: transform 0.6s ease-in-out;
+        transition: transform 0.6s ease-in-out;
       }
 
       .mobile-layout .slide { width: 50%; height: 100%; position: relative; }
@@ -74,7 +81,6 @@
         position: absolute; inset: 0; width: 100%; height: 100%; border: none;
       }
 
-      /* Nút điều hướng (to hơn) */
       .mobile-layout .button {
         position: absolute; top: 50%;
         transform: translateY(-50%) scale(1);
@@ -101,72 +107,63 @@
 
   <!-- ===== DESKTOP ===== -->
   <div class="desktop-layout">
-    <div class="iframe-wrap">
-      <iframe id="iframe1"
-        src="https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed"
-        allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
+    <div class="slider-container">
+      <div class="slider-wrapper" id="sliderDesktop">
+        <!-- Trang 1 -->
+        <div class="slide">
+          <iframe src="https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed"
+            allowfullscreen></iframe>
+        </div>
+        <!-- Trang 2 -->
+        <div class="slide">
+          <iframe src="https://www.canva.com/design/DAGzUDV-HjQ/21minuCM_u54x-7zSqFogA/view?embed"
+            allowfullscreen></iframe>
+        </div>
+      </div>
 
-      <!-- Prev = RELOAD | Next = sang trang 2 -->
-      <button class="prev-button" onclick="reloadPage()">&#10094;</button>
-      <button class="next-button" onclick="switchToSecondPageDesktop()">&#10095;</button>
+      <!-- Nút điều hướng -->
+      <button class="prev-button" onclick="goToPageDesktop(1)">&#10094;</button>
+      <button class="next-button" onclick="goToPageDesktop(2)">&#10095;</button>
     </div>
   </div>
 
-  <!-- ===== MOBILE (full-screen) ===== -->
+  <!-- ===== MOBILE ===== -->
   <div class="mobile-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderMobile">
         <!-- Trang 1 -->
         <div class="slide">
-          <iframe loading="lazy"
-            src="https://www.canva.com/design/DAGzwjlhbkY/sqzzrSpc9YIbmPEh30_Hew/view?embed"
-            allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
+          <iframe src="https://www.canva.com/design/DAGzwjlhbkY/sqzzrSpc9YIbmPEh30_Hew/view?embed"
+            allowfullscreen></iframe>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
-          <iframe loading="lazy"
-            src="https://www.canva.com/design/DAGzwg0_J_U/15AS0SHxEl1Q0ol0FDnK9Q/view?embed"
-            allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
+          <iframe src="https://www.canva.com/design/DAGzwg0_J_U/15AS0SHxEl1Q0ol0FDnK9Q/view?embed"
+            allowfullscreen></iframe>
         </div>
       </div>
 
-      <!-- Prev = RELOAD, Next = sang trang 2 -->
-      <button class="button prev-button" onclick="reloadPage()">&#10094;</button>
+      <!-- Nút điều hướng -->
+      <button class="button prev-button" onclick="goToPageMobile(1)">&#10094;</button>
       <button class="button next-button" onclick="goToPageMobile(2)">&#10095;</button>
     </div>
   </div>
 
   <script>
-    /* ==== DESKTOP ==== */
-    function switchToSecondPageDesktop() {
-      var iframe = document.getElementById("iframe1");
-      iframe.src = "https://www.canva.com/design/DAGzUDV-HjQ/21minuCM_u54x-7zSqFogA/view?embed";
+    /* ==== DESKTOP SLIDER ==== */
+    const sliderDesktop = document.getElementById("sliderDesktop");
+    function goToPageDesktop(page) {
+      const offset = (page - 1) * 50; // 0% hoặc 50%
+      sliderDesktop.style.transform = `translateX(-${offset}%)`;
     }
 
     /* ==== MOBILE SLIDER ==== */
     const sliderMobile = document.getElementById("sliderMobile");
     function goToPageMobile(page) {
-      const offset = (page - 1) * 50; // 0% hoặc 50%
+      const offset = (page - 1) * 50;
       sliderMobile.style.transform = `translateX(-${offset}%)`;
     }
-
-    /* ==== RELOAD dùng chung cho PC & Mobile ==== */
-    function reloadPage() { location.reload(); }
-
-    /* ==== Mô phỏng hover khi chạm trên mobile ==== */
-    document.querySelectorAll('.mobile-layout .button').forEach(btn => {
-      btn.addEventListener('touchstart', () => {
-        btn.style.transform = 'translateY(-50%) scale(0.9)';
-      });
-      btn.addEventListener('touchend', () => {
-        btn.style.transform = 'translateY(-50%) scale(1)';
-      });
-      btn.addEventListener('touchcancel', () => {
-        btn.style.transform = 'translateY(-50%) scale(1)';
-      });
-    });
   </script>
 
 </body>
 </html>
-
