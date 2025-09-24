@@ -118,3 +118,18 @@
     }
   }
 }
+@media (max-width: 1024px) {
+  /* Không cho click trực tiếp lên video -> Zalo không mở controls */
+  .mob-video {
+    pointer-events: none;   /* QUAN TRỌNG */
+    -webkit-touch-callout: none;
+  }
+
+  /* Phòng trường hợp webview vẫn cố hiện control */
+  .mob-video::-webkit-media-controls,
+  .mob-video::-webkit-media-controls-enclosure {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+}
