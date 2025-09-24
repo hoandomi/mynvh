@@ -102,86 +102,94 @@
   </div>
 
   <script>
-    const sliderDesktop = document.getElementById("sliderDesktop");
-    const sliderMobile  = document.getElementById("sliderMobile");
-    const overlay       = document.getElementById("overlayReload");
+  const sliderDesktop = document.getElementById("sliderDesktop");
+  const sliderMobile  = document.getElementById("sliderMobile");
+  const overlay       = document.getElementById("overlayReload");
 
-    const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
-    const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
+  const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
+  const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
 
-    function resetAll(videos) {
-      videos.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
+  // Dừng & reset 1 mảng video
+  function resetAll(videos) {
+    videos.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
+  }
+
+  // Phát an toàn (đã tương thích iOS)
+  function safePlay(videoEl) {
+    videoEl.load(); // đảm bảo buffer trước
+    const tryPlay = () => videoEl.play().catch(() => {});
+    if (videoEl.readyState >= 2) {
+      tryPlay();
+    } else {
+      const onReady = () => { videoEl.removeEventListener('canplay', onReady); tryPlay(); };
+      videoEl.addEventListener('canplay', onReady, { once: true });
     }
-    resetAll(deskVideos);
-    resetAll(mobVideos);
+  }
 
-    /* ==== Chuyển trang + điều khiển video ==== */
-    function goToPageDesktop(page, restart=false) {
-      const offset = (page - 1) * 50;
-      if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
-      resetAll(deskVideos);
-      const idx = page - 1;
-      const target = deskVideos[idx];
-      if (target) {
-        if (restart) target.currentTime = 0;
-        safePlay(target);
+  /**
+   * HÀM DÙNG CHUNG CHO CẢ PC & MOBILE
+   * @param {'desktop'|'mobile'} device
+   * @param {number} page 1 hoặc 2
+   * @param {boolean} restart true = tua về 0 rồi phát
+   */
+  function goToPage(device, page, restart = false) {
+    const offset = (page - 1) * 50;
+    const isDesktop = device === 'desktop';
+
+    const slider = isDesktop ? sliderDesktop : sliderMobile;
+    const videos = isDesktop ? deskVideos : mobVideos;
+
+    if (slider) slider.style.transform = `translateX(-${offset}%)`;
+
+    // Dừng & reset tất cả video còn lại
+    resetAll(videos);
+
+    // Video mục tiêu
+    const idx = page - 1;
+    const target = videos[idx];
+    if (target) {
+      // Giống PC: nhấn nút là CHẠY + (nếu restart) tua về 0
+      if (!isDesktop) {
+        // mobile: vẫn có poster đen khi mới mở, nhưng bấm là chạy như PC
+        target.preload = 'auto'; // bật tải khi người dùng bấm
       }
+      if (restart) target.currentTime = 0;
+      safePlay(target);
     }
+  }
 
-    function goToPageMobile(page, restart=false) {
-      const offset = (page - 1) * 50;
-      if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+  // Alias cho code HTML cũ (để không phải sửa onclick trong HTML)
+  function goToPageDesktop(page, restart = false) { goToPage('desktop', page, restart); }
+  function goToPageMobile(page, restart = false)  { goToPage('mobile',  page, restart); }
 
-      resetAll(mobVideos);
+  /* ==== Reload mềm (nếu cần) ==== */
+  function softReload() {
+    overlay.classList.add('show');
+    resetAll(deskVideos); resetAll(mobVideos);
 
-      const idx = page - 1;
-      const target = mobVideos[idx];
-      if (target) {
-        // SỬA: chỉ khi bấm nút mới bật tải & phát
-        target.preload = 'auto';
-        if (restart) target.currentTime = 0;
-        safePlay(target);
-      }
-    }
+    [...deskVideos, ...mobVideos].forEach(v => {
+      const srcEl = v.querySelector('source');
+      if (!srcEl) return;
+      try {
+        const url = new URL(srcEl.getAttribute('src'), location.href);
+        url.searchParams.set('_r', Date.now().toString());
+        srcEl.setAttribute('src', url.toString());
+        v.load();
+      } catch (e) { v.load(); }
+    });
 
-    // Tự động phát an toàn
-    function safePlay(videoEl) {
-      // iOS cần load trước
-      videoEl.load();
-      const tryPlay = () => videoEl.play().catch(() => {});
-      if (videoEl.readyState >= 2) {
-        tryPlay();
-      } else {
-        const onReady = () => { videoEl.removeEventListener('canplay', onReady); tryPlay(); };
-        videoEl.addEventListener('canplay', onReady, { once: true });
-      }
-    }
+    let done = false;
+    const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
+    setTimeout(off, 3000);
+    const anyVideo = deskVideos[0] || mobVideos[0];
+    if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
+  }
 
-    /* ==== Reload mềm (nếu cần) ==== */
-    function softReload() {
-      overlay.classList.add('show');
-      resetAll(deskVideos); resetAll(mobVideos);
-      [...deskVideos, ...mobVideos].forEach(v => {
-        const srcEl = v.querySelector('source');
-        if (!srcEl) return;
-        try {
-          const url = new URL(srcEl.getAttribute('src'), location.href);
-          url.searchParams.set('_r', Date.now().toString());
-          srcEl.setAttribute('src', url.toString());
-          v.load();
-        } catch (e) { v.load(); }
-      });
-      let done = false;
-      const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
-      setTimeout(off, 3000);
-      const anyVideo = deskVideos[0] || mobVideos[0];
-      if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
-    }
+  // Mặc định hiển thị trang 1 cho cả PC & Mobile (KHÔNG tự chạy)
+  goToPageDesktop(1, false);
+  goToPageMobile(1, false);
+</script>
 
-    // Mặc định hiển thị trang 1 (không tự chạy video)
-    goToPageDesktop(1, false);
-    goToPageMobile(1, false);
-  </script>
 
 </body>
 </html>
