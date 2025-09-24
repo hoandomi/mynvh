@@ -3,22 +3,46 @@
   .desktop-layout { display: none; }
   .mobile-layout  { display: block; }
 
+  /* Nút điều hướng */
   .mobile-layout .button {
-    position: absolute; top: 50%;
+    position: absolute;
+    top: 50%;
     transform: translateY(-50%) scale(1);
-    background: rgba(0,0,0,0.6); color: #fff;
-    border: none; border-radius: 50%;
-    width: 40px; height: 40px; font-size: 28px;
-    cursor: pointer; z-index: 20;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+
+    /* Kích thước linh hoạt theo viewport */
+    width: clamp(36px, 8vw, 48px);
+    height: clamp(36px, 8vw, 48px);
+    font-size: clamp(22px, 5vw, 32px);
+
+    cursor: pointer;
+    z-index: 20;
+
     transition: transform 0.2s ease, background 0.3s, color 0.3s;
+
+    /* Chống sát mép tai thỏ (safe area) */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+
   .mobile-layout .button:hover {
-    background: #fff; color: #000;
+    background: #fff;
+    color: #000;
     transform: translateY(-50%) scale(0.9);
   }
-  .mobile-layout .button:active { transform: translateY(-50%) scale(0.9); }
-  .mobile-layout .next-button { right: max(10px, env(safe-area-inset-right)); }
-  .mobile-layout .prev-button { left:  max(10px, env(safe-area-inset-left)); }
+
+  .mobile-layout .button:active {
+    transform: translateY(-50%) scale(0.9);
+  }
+
+  /* Vị trí nút: luôn cách mép 10px + safe area */
+  .mobile-layout .next-button {
+    right: calc(10px + env(safe-area-inset-right, 0px));
+  }
+  .mobile-layout .prev-button {
+    left: calc(10px + env(safe-area-inset-left, 0px));
+  }
 }
