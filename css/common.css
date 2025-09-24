@@ -1,0 +1,85 @@
+/* ====== COMMON (dùng chung) ====== */
+
+/* Khớp chiều cao viewport thực tế trên mobile */
+html, body {
+  height: 100vh;   /* fallback */
+  height: 100dvh;  /* iOS/Android dynamic viewport */
+  margin: 0;
+  background: #000;
+  font-family: Arial, sans-serif;
+}
+body { overflow: hidden; }
+
+/* Mặc định ẩn hai layout; sẽ bật ở desktop.css & mobile.css */
+.desktop-layout { display: none; }
+.mobile-layout  { display: none; }
+
+/* Khung slider cơ bản (dùng chung) */
+.slider-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;   /* fallback */
+  height: 100dvh;  /* thật sự vừa màn */
+  overflow: hidden;
+  background: #000;
+}
+.slider-wrapper {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform 0.6s ease-in-out;
+}
+.slide {
+  width: 50%;
+  height: 100%;
+  position: relative;
+  background: #000;
+}
+video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* VỪA MÀN, không crop */
+  background: #000;    /* letterbox đen */
+  display: block;
+}
+
+/* Overlay reload mềm (logo quay, KHÔNG crop + responsive) */
+#overlayReload {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 250ms ease;
+  z-index: 30;
+  display: flex; justify-content: center; align-items: center;
+}
+#overlayReload.show { opacity: 1; pointer-events: auto; }
+
+.logo-loader {
+  width: auto; height: auto;
+  max-width: 90vw; max-height: 50vh;
+  display: flex; justify-content: center; align-items: center;
+  padding: 8px;
+}
+.logo-loader img {
+  width: clamp(64px, 22vw, 140px);
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
+  image-rendering: auto;
+  animation: spinLogo 1.5s linear infinite;
+  will-change: transform;
+}
+@keyframes spinLogo {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Giảm chuyển động nếu người dùng chọn */
+@media (prefers-reduced-motion: reduce) {
+  .slider-wrapper { transition: none !important; }
+  .logo-loader img { animation: none; }
+  #overlayReload { transition: none; }
+}
