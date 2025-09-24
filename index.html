@@ -5,24 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>15 năm Phucbinh Group</title>
   <link rel="icon" href="https://phucbinh.com.vn/wp-content/uploads/2023/03/cropped-Group-8-180x180.png" type="image/png" sizes="500x500">
-<!-- ========== SOCIAL PREVIEW (Open Graph + Twitter Card) ========== -->
-<link rel="canonical" href="https://www.15namphucbinhgroup.online/">
-<meta property="og:locale" content="vi_VN">
-<meta property="og:title" content="15 năm Phucbinh Group">
-<meta property="og:description" content="Cùng nhau kiến tạo tương lai">
-<meta property="og:url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Phucbinh Group">
 
-<!-- Ảnh trên chính máy chủ của bạn (đặt đúng đường dẫn ảnh thật sự tồn tại) -->
-<meta property="og:image" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
-<meta property="og:image:secure_url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+  <!-- ========== SOCIAL PREVIEW (Open Graph + Twitter Card) ========== -->
+  <link rel="canonical" href="https://www.15namphucbinhgroup.online/">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:title" content="15 năm Phucbinh Group">
+  <meta property="og:description" content="Cùng nhau kiến tạo tương lai">
+  <!-- SỬA: og:url phải là URL trang, không phải URL ảnh -->
+  <meta property="og:url" content="https://www.15namphucbinhgroup.online/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Phucbinh Group">
+  <!-- Ảnh preview (tạm đang dùng pinimg). Khuyến nghị đặt ảnh trên chính domain của bạn -->
+  <meta property="og:image" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
+  <meta property="og:image:secure_url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
   <!-- Thứ tự QUAN TRỌNG: common trước, rồi desktop, rồi mobile -->
   <link rel="stylesheet" href="./css/common.css">
   <link rel="stylesheet" href="./css/desktop.css">
   <link rel="stylesheet" href="./css/mobile.css">
+
+  <!-- Ẩn mọi control WebKit cho mobile video đề phòng hệ thống tự hiện -->
+  <style>
+    .mob-video::-webkit-media-controls,
+    .mob-video::-webkit-media-controls-enclosure { display: none !important; }
+  </style>
 </head>
 
 <body>
@@ -64,13 +72,24 @@
       <div class="slider-wrapper" id="sliderMobile">
         <!-- Trang 1 -->
         <div class="slide">
-          <video class="mob-video" preload="metadata" muted playsinline>
+          <!-- SỬA: preload=none + poster đen + chặn UI -->
+          <video class="mob-video"
+                 preload="none"
+                 poster="./data/black.jpg"
+                 muted playsinline webkit-playsinline
+                 disablepictureinpicture
+                 controlslist="nodownload noplaybackrate nofullscreen">
             <source src="./data/trang 1 .mp4" type="video/mp4"/>
           </video>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
-          <video class="mob-video" preload="metadata" muted playsinline>
+          <video class="mob-video"
+                 preload="none"
+                 poster="./data/black.jpg"
+                 muted playsinline webkit-playsinline
+                 disablepictureinpicture
+                 controlslist="nodownload noplaybackrate nofullscreen">
             <source src="./data/trang 2 .mp4" type="video/mp4"/>
           </video>
         </div>
@@ -96,6 +115,7 @@
     resetAll(deskVideos);
     resetAll(mobVideos);
 
+    /* ==== Chuyển trang + điều khiển video ==== */
     function goToPageDesktop(page, restart=false) {
       const offset = (page - 1) * 50;
       if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
@@ -111,28 +131,33 @@
     function goToPageMobile(page, restart=false) {
       const offset = (page - 1) * 50;
       if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+
       resetAll(mobVideos);
+
       const idx = page - 1;
       const target = mobVideos[idx];
       if (target) {
+        // SỬA: chỉ khi bấm nút mới bật tải & phát
+        target.preload = 'auto';
         if (restart) target.currentTime = 0;
         safePlay(target);
       }
     }
 
+    // Tự động phát an toàn
     function safePlay(videoEl) {
+      // iOS cần load trước
+      videoEl.load();
+      const tryPlay = () => videoEl.play().catch(() => {});
       if (videoEl.readyState >= 2) {
-        videoEl.play().catch(()=>{});
+        tryPlay();
       } else {
-        const onReady = () => {
-          videoEl.removeEventListener('canplay', onReady);
-          videoEl.play().catch(()=>{});
-        };
-        videoEl.addEventListener('canplay', onReady);
-        videoEl.load();
+        const onReady = () => { videoEl.removeEventListener('canplay', onReady); tryPlay(); };
+        videoEl.addEventListener('canplay', onReady, { once: true });
       }
     }
 
+    /* ==== Reload mềm (nếu cần) ==== */
     function softReload() {
       overlay.classList.add('show');
       resetAll(deskVideos); resetAll(mobVideos);
@@ -153,6 +178,7 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
+    // Mặc định hiển thị trang 1 (không tự chạy video)
     goToPageDesktop(1, false);
     goToPageMobile(1, false);
   </script>
