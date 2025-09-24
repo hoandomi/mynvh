@@ -3,46 +3,118 @@
   .desktop-layout { display: none; }
   .mobile-layout  { display: block; }
 
-  /* Nút điều hướng */
-  .mobile-layout .button {
+  /* Nút điều hướng — tương thích webview & chuẩn truy cập */
+  .mobile-layout .button,
+  .mobile-layout .next-button,
+  .mobile-layout .prev-button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%) scale(1);
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
 
-    /* Kích thước linh hoạt theo viewport */
-    width: clamp(36px, 8vw, 48px);
-    height: clamp(36px, 8vw, 48px);
+    /* Kích thước linh hoạt + tối thiểu 44x44 (chuẩn chạm) */
+    width: clamp(44px, 9vw, 64px);
+    height: clamp(44px, 9vw, 64px);
     font-size: clamp(22px, 5vw, 32px);
+    line-height: 1;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 
     cursor: pointer;
-    z-index: 20;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 
-    transition: transform 0.2s ease, background 0.3s, color 0.3s;
+    z-index: 9999; /* nổi trên video/webview UI */
+    transition: transform 0.2s ease, background 0.25s ease, color 0.25s ease;
 
-    /* Chống sát mép tai thỏ (safe area) */
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    /* Chừa khoảng cho notch/safe-area (env mới + constant cũ) */
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    /* Fallback iOS cũ: */
+    padding-left: constant(safe-area-inset-left, 0);
+    padding-right: constant(safe-area-inset-right, 0);
+
+    /* Tăng vùng chạm thực tế (không đổi kích thước thị giác) */
+    touch-action: manipulation;
   }
 
-  .mobile-layout .button:hover {
-    background: #fff;
-    color: #000;
-    transform: translateY(-50%) scale(0.9);
+  /* Chỉ áp dụng hover trên thiết bị có hover thật */
+  @media (hover: hover) and (pointer: fine) {
+    .mobile-layout .button:hover,
+    .mobile-layout .next-button:hover,
+    .mobile-layout .prev-button:hover {
+      background: #fff;
+      color: #000;
+      transform: translateY(-50%) scale(0.94);
+    }
   }
 
-  .mobile-layout .button:active {
-    transform: translateY(-50%) scale(0.9);
+  .mobile-layout .button:active,
+  .mobile-layout .next-button:active,
+  .mobile-layout .prev-button:active {
+    transform: translateY(-50%) scale(0.94);
   }
 
-  /* Vị trí nút: luôn cách mép 10px + safe area */
-  .mobile-layout .next-button {
-    right: calc(10px + env(safe-area-inset-right, 0px));
+  /* Trợ năng khi điều hướng bằng bàn phím/remote */
+  .mobile-layout .button:focus-visible,
+  .mobile-layout .next-button:focus-visible,
+  .mobile-layout .prev-button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
   }
-  .mobile-layout .prev-button {
-    left: calc(10px + env(safe-area-inset-left, 0px));
+
+  /* Đặt vị trí nút: tính cả safe-area; hỗ trợ RTL cơ bản */
+  :root { direction: ltr; } /* đổi thành rtl nếu cần toàn site RTL */
+
+  /* LTR mặc định */
+  html[dir="ltr"] .mobile-layout .next-button,
+  :root:not([dir="rtl"]) .mobile-layout .next-button {
+    right: calc(12px + env(safe-area-inset-right, 0));
+    right: calc(12px + constant(safe-area-inset-right, 0));
+  }
+  html[dir="ltr"] .mobile-layout .prev-button,
+  :root:not([dir="rtl"]) .mobile-layout .prev-button {
+    left: calc(12px + env(safe-area-inset-left, 0));
+    left: calc(12px + constant(safe-area-inset-left, 0));
+  }
+
+  /* RTL (nếu trang đặt dir="rtl") */
+  html[dir="rtl"] .mobile-layout .next-button {
+    left: calc(12px + env(safe-area-inset-left, 0));
+    left: calc(12px + constant(safe-area-inset-left, 0));
+  }
+  html[dir="rtl"] .mobile-layout .prev-button {
+    right: calc(12px + env(safe-area-inset-right, 0));
+    right: calc(12px + constant(safe-area-inset-right, 0));
+  }
+
+  /* Tôn trọng tùy chọn giảm chuyển động của người dùng */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-layout .button,
+    .mobile-layout .next-button,
+    .mobile-layout .prev-button {
+      transition: none !important;
+      transform: translateY(-50%); /* bỏ scale */
+    }
+  }
+
+  /* Tương phản cao (Windows High Contrast / Forced Colors) */
+  @media (forced-colors: active) {
+    .mobile-layout .button,
+    .mobile-layout .next-button,
+    .mobile-layout .prev-button {
+      background: CanvasText;
+      color: Canvas;
+      border: 1px solid CanvasText;
+      box-shadow: none;
+    }
   }
 }
