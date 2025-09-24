@@ -5,146 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>15 năm Phucbinh Group</title>
   <link rel="icon" href="https://phucbinh.com.vn/wp-content/uploads/2023/03/cropped-Group-8-180x180.png" type="image/png" sizes="500x500">
+<!-- ========== SOCIAL PREVIEW (Open Graph + Twitter Card) ========== -->
+<link rel="canonical" href="https://www.15namphucbinhgroup.online/">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:title" content="15 năm Phucbinh Group">
+<meta property="og:description" content="Cùng nhau kiến tạo tương lai">
+<meta property="og:url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Phucbinh Group">
 
-  <style>
-    /* Ẩn/hiện layout */
-    .desktop-layout { display: none; }
-    .mobile-layout  { display: none; }
-
-    @media (min-width: 1025px) { .desktop-layout { display: block; } }
-    @media (max-width: 1024px) { .mobile-layout { display: block; } }
-
-    /* ===== DESKTOP (slider) ===== */
-    .desktop-layout .slider-container {
-      position: relative;
-      width: 100vw; height: 100vh;
-      overflow: hidden;
-      background: #000;
-    }
-    .desktop-layout .slider-wrapper {
-      display: flex;
-      width: 200%; height: 100%;
-      transition: transform 0.6s ease-in-out;
-    }
-    .desktop-layout .slide {
-      width: 50%; height: 100%;
-      position: relative;
-      background: #000;
-    }
-    .desktop-layout iframe {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%; border: none;
-      background: #000;
-    }
-
-    .desktop-layout .next-button,
-    .desktop-layout .prev-button {
-      position: absolute; top: 50%;
-      transform: translateY(-50%) scale(1);
-      width: 80px; height: 80px;
-      background-color: #9b9b9b; color: #fff;
-      border: none; border-radius: 50%;
-      font-size: 35px; display: flex; justify-content: center; align-items: center;
-      cursor: pointer; box-shadow: 2px 2px 10px rgba(94,94,94,0.3);
-      transition: background-color 0.3s, color 0.3s, transform 0.2s ease;
-      z-index: 20;
-    }
-    .desktop-layout .next-button:hover,
-    .desktop-layout .prev-button:hover {
-      background-color: #fff; color: rgb(104,104,104);
-      transform: translateY(-50%) scale(0.9);
-    }
-    .desktop-layout .next-button { right: 20px; }
-    .desktop-layout .prev-button { left: 20px; }
-
-    /* ===== MOBILE ===== */
-    @media (max-width: 1024px) {
-      html, body { height: 100%; width: 100%; margin: 0; }
-      body { overflow: hidden; background:#000; }
-
-      .mobile-layout { width: 100vw; height: 100vh; margin: 0; background: #000; }
-
-      .mobile-layout .slider-container {
-        position: relative;
-        width: 100vw; height: 100vh;
-        overflow: hidden;
-        background: #000;
-      }
-      .mobile-layout .slider-wrapper {
-        display: flex;
-        width: 200%; height: 100%;
-        transition: transform 0.6s ease-in-out;
-      }
-      .mobile-layout .slide { width: 50%; height: 100%; position: relative; background:#000; }
-      .mobile-layout iframe {
-        position: absolute; inset: 0; width: 100%; height: 100%; border: none; background:#000;
-      }
-
-      .mobile-layout .button {
-        position: absolute; top: 50%;
-        transform: translateY(-50%) scale(1);
-        background: rgba(0,0,0,0.6); color: #fff;
-        border: none; border-radius: 50%;
-        width: 40px; height: 40px; font-size: 28px;
-        cursor: pointer; z-index: 20;
-        transition: transform 0.2s ease, background 0.3s, color 0.3s;
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-      }
-      .mobile-layout .button:hover {
-        background: #fff; color: #000;
-        transform: translateY(-50%) scale(0.9);
-      }
-      .mobile-layout .button:active { transform: translateY(-50%) scale(0.9); }
-      .mobile-layout .next-button { right: max(10px, env(safe-area-inset-right)); }
-      .mobile-layout .prev-button { left:  max(10px, env(safe-area-inset-left)); }
-    }
-
-    /* ===== Overlay reload mềm (logo quay, KHÔNG crop + responsive) ===== */
-    #overlayReload {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(2px);
-      opacity: 0; pointer-events: none;
-      transition: opacity 250ms ease;
-      z-index: 30;
-      display: flex; justify-content: center; align-items: center;
-    }
-    #overlayReload.show { opacity: 1; pointer-events: auto; }
-
-    .logo-loader {
-      /* container co giãn theo màn hình, tránh tràn */
-      width: auto; height: auto;
-      max-width: 90vw; max-height: 50vh;
-      display: flex; justify-content: center; align-items: center;
-      padding: 8px;
-    }
-    .logo-loader img {
-      /* KHÔNG crop, giữ nguyên tỉ lệ logo */
-      width: clamp(64px, 22vw, 140px);
-      height: auto;
-      object-fit: contain;
-      border-radius: 0;             /* bỏ bo tròn để không cắt logo */
-      image-rendering: auto;
-      animation: spinLogo 1.5s linear infinite; /* logo quay */
-      will-change: transform;
-    }
-    @keyframes spinLogo {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-
-    /* Giảm chuyển động nếu người dùng chọn */
-    @media (prefers-reduced-motion: reduce) {
-      .desktop-layout .slider-wrapper,
-      .mobile-layout .slider-wrapper { transition: none !important; }
-      .logo-loader img { animation: none; }
-      #overlayReload { transition: none; }
-    }
-  </style>
+<!-- Ảnh trên chính máy chủ của bạn (đặt đúng đường dẫn ảnh thật sự tồn tại) -->
+<meta property="og:image" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
+<meta property="og:image:secure_url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+  <!-- Thứ tự QUAN TRỌNG: common trước, rồi desktop, rồi mobile -->
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/desktop.css">
+  <link rel="stylesheet" href="./css/mobile.css">
 </head>
 
-<body style="margin:0; font-family: Arial, sans-serif; background:#000;">
+<body>
 
   <!-- Overlay với logo quay (không crop, responsive) -->
   <div id="overlayReload">
@@ -159,17 +40,21 @@
       <div class="slider-wrapper" id="sliderDesktop">
         <!-- Trang 1 -->
         <div class="slide">
-          <iframe src="https://www.canva.com/design/DAGzTCVK570/RDXQKXWvFOyhTzCVmJPoPQ/view?embed" allowfullscreen></iframe>
+          <video class="desk-video" preload="metadata" muted playsinline>
+            <source src="./data/trang 1 pc.mp4" type="video/mp4"/>
+          </video>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
-          <iframe src="https://www.canva.com/design/DAGzUDV-HjQ/21minuCM_u54x-7zSqFogA/view?embed" allowfullscreen></iframe>
+          <video class="desk-video" preload="metadata" muted playsinline>
+            <source src="./data/trang 2 pc.mp4" type="video/mp4"/>
+          </video>
         </div>
       </div>
 
       <!-- Nút điều hướng -->
-      <button class="prev-button" onclick="softReload()">&#10094;</button>
-      <button class="next-button" onclick="goToPageDesktop(2)">&#10095;</button>
+      <button class="prev-button" onclick="goToPageDesktop(1, true)">&#10094;</button>
+      <button class="next-button" onclick="goToPageDesktop(2, true)">&#10095;</button>
     </div>
   </div>
 
@@ -179,17 +64,21 @@
       <div class="slider-wrapper" id="sliderMobile">
         <!-- Trang 1 -->
         <div class="slide">
-          <iframe src="https://www.canva.com/design/DAGzwjlhbkY/sqzzrSpc9YIbmPEh30_Hew/view?embed" allowfullscreen></iframe>
+          <video class="mob-video" preload="metadata" muted playsinline>
+            <source src="./data/trang 1 .mp4" type="video/mp4"/>
+          </video>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
-          <iframe src="https://www.canva.com/design/DAGzwg0_J_U/15AS0SHxEl1Q0ol0FDnK9Q/view?embed" allowfullscreen></iframe>
+          <video class="mob-video" preload="metadata" muted playsinline>
+            <source src="./data/trang 2 .mp4" type="video/mp4"/>
+          </video>
         </div>
       </div>
 
       <!-- Nút điều hướng -->
-      <button class="button prev-button" onclick="softReload()">&#10094;</button>
-      <button class="button next-button" onclick="goToPageMobile(2)">&#10095;</button>
+      <button class="button prev-button" onclick="goToPageMobile(1, true)">&#10094;</button>
+      <button class="button next-button" onclick="goToPageMobile(2, true)">&#10095;</button>
     </div>
   </div>
 
@@ -198,54 +87,74 @@
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
 
-    /* ==== Chuyển trang ==== */
-    function goToPageDesktop(page) {
-      const offset = (page - 1) * 50;
-      sliderDesktop.style.transform = `translateX(-${offset}%)`;
+    const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
+    const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
+
+    function resetAll(videos) {
+      videos.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
     }
-    function goToPageMobile(page) {
+    resetAll(deskVideos);
+    resetAll(mobVideos);
+
+    function goToPageDesktop(page, restart=false) {
       const offset = (page - 1) * 50;
-      sliderMobile.style.transform = `translateX(-${offset}%)`;
+      if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
+      resetAll(deskVideos);
+      const idx = page - 1;
+      const target = deskVideos[idx];
+      if (target) {
+        if (restart) target.currentTime = 0;
+        safePlay(target);
+      }
     }
 
-    /* ==== Reload mềm: không trắng trang ==== */
+    function goToPageMobile(page, restart=false) {
+      const offset = (page - 1) * 50;
+      if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+      resetAll(mobVideos);
+      const idx = page - 1;
+      const target = mobVideos[idx];
+      if (target) {
+        if (restart) target.currentTime = 0;
+        safePlay(target);
+      }
+    }
+
+    function safePlay(videoEl) {
+      if (videoEl.readyState >= 2) {
+        videoEl.play().catch(()=>{});
+      } else {
+        const onReady = () => {
+          videoEl.removeEventListener('canplay', onReady);
+          videoEl.play().catch(()=>{});
+        };
+        videoEl.addEventListener('canplay', onReady);
+        videoEl.load();
+      }
+    }
+
     function softReload() {
       overlay.classList.add('show');
-      if (sliderDesktop) sliderDesktop.style.transform = 'translateX(0%)';
-      if (sliderMobile)  sliderMobile.style.transform  = 'translateX(0%)';
-
-      const iframes = document.querySelectorAll('.slide iframe');
-      let remaining = iframes.length;
-
-      iframes.forEach(oldIframe => {
-        const src = oldIframe.getAttribute('src') || oldIframe.src;
-        const newIframe = oldIframe.cloneNode(true);
-
-        // ép reload thật (cache-busting)
+      resetAll(deskVideos); resetAll(mobVideos);
+      [...deskVideos, ...mobVideos].forEach(v => {
+        const srcEl = v.querySelector('source');
+        if (!srcEl) return;
         try {
-          const url = new URL(src, location.href);
+          const url = new URL(srcEl.getAttribute('src'), location.href);
           url.searchParams.set('_r', Date.now().toString());
-          newIframe.setAttribute('src', url.toString());
-        } catch (e) {
-          newIframe.setAttribute('src', src);
-        }
-
-        newIframe.style.background = '#000';
-        newIframe.onload = () => {
-          remaining -= 1;
-          if (remaining <= 0) {
-            setTimeout(() => overlay.classList.remove('show'), 120);
-          }
-        };
-
-        oldIframe.parentNode.replaceChild(newIframe, oldIframe);
+          srcEl.setAttribute('src', url.toString());
+          v.load();
+        } catch (e) { v.load(); }
       });
-
-      // Fallback tắt overlay sau 3s nếu mạng chậm
-      setTimeout(() => {
-        if (overlay.classList.contains('show')) overlay.classList.remove('show');
-      }, 3000);
+      let done = false;
+      const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
+      setTimeout(off, 3000);
+      const anyVideo = deskVideos[0] || mobVideos[0];
+      if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
+
+    goToPageDesktop(1, false);
+    goToPageMobile(1, false);
   </script>
 
 </body>
