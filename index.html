@@ -56,7 +56,7 @@
     white-space: nowrap;
   }
   #zaloCta:active { transform: translate(-50%, -50%) scale(.98); }
-  </style>
+</style>
 </head>
 
 <body>
@@ -75,7 +75,7 @@
         <!-- Trang 1 -->
         <div class="slide">
           <video class="desk-video" preload="metadata" muted playsinline>
-            <source src="./data/1pc.mp4" type="video/mp4"/>
+            <source src="./data/zalo.mp4" type="video/mp4"/>
           </video>
         </div>
         <!-- Trang 2 -->
@@ -131,7 +131,7 @@
   <!-- CTA chỉ cho Zalo mobile -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">🎉 Xem thiệp mời</button>
 
-  <script>
+ <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
@@ -236,89 +236,31 @@
       zaloCta.style.display = 'inline-flex';
     }
 
-    // —— BẤM CTA (Zalo: phát ./data/zalo.mp4; Trình duyệt khác: giữ luồng cũ)
+    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, SAU 5 GIÂY auto "bấm" nút phải để sang Trang 2
     function playInviteNow(){
-      if (isMobile && isZalo) {
-        // ===== CHẾ ĐỘ ZALO: phát video riêng ./data/zalo.mp4 =====
-        resetAll(mobVideos); // dừng toàn bộ video đang có
-
-        // Tạo slide + video mới
-        const zaloWrapper = document.createElement("div");
-        zaloWrapper.className = "slide zalo-slide";
-        zaloWrapper.style.width = "100%";
-        zaloWrapper.style.height = "100%";
-
-        const zaloVideo = document.createElement("video");
-        zaloVideo.className = "mob-video zalo-video";
-        zaloVideo.setAttribute("preload","auto");
-        zaloVideo.setAttribute("playsinline","");
-        zaloVideo.setAttribute("webkit-playsinline","");
-        zaloVideo.setAttribute("x5-playsinline","");
-        zaloVideo.setAttribute("x5-video-player-type","h5");
-        zaloVideo.setAttribute("disablepictureinpicture","");
-        zaloVideo.setAttribute("controlslist","nodownload noplaybackrate nofullscreen noremoteplayback");
-        zaloVideo.muted = true;
-
-        const source = document.createElement("source");
-        source.src = "./data/zalo.mp4";
-        source.type = "video/mp4";
-        zaloVideo.appendChild(source);
-        zaloWrapper.appendChild(zaloVideo);
-
-        // Thay slider bằng video Zalo duy nhất
-        if (sliderMobile){
-          sliderMobile.innerHTML = "";
-          sliderMobile.appendChild(zaloWrapper);
-          sliderMobile.style.transform = "translateX(0%)"; // chắc chắn ở trang đầu
-        }
-
-        // Phát video bằng gesture
-        playWithGesture(zaloVideo);
-
-        // Ẩn CTA khi bắt đầu chạy
-        zaloVideo.addEventListener("playing", () => {
-          if (zaloCta) zaloCta.style.display = "none";
-        }, { once:true });
-
+      // Về Trang 1 và phát video 1 bằng gesture
+      goToPageMobile(1, true);
+      const v1 = mobVideos[0];
+      if (v1){
+        v1.preload = 'auto';
+        v1.muted = true;
+        playWithGesture(v1);
+        v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
       } else {
-        // ===== KHÔNG PHẢI ZALO: giữ luồng cũ — Trang 1 -> hết -> Trang 2 =====
-        goToPageMobile(1, true);
-        const v1 = mobVideos[0];
-        const v2 = mobVideos[1];
-        let advanced = false;
+        if (zaloCta) zaloCta.style.display = 'none';
+      }
 
-        function gotoSecond(){
-          if (advanced) return;
-          advanced = true;
-          if (zaloCta) zaloCta.style.display = 'none';
+      // SAU 5 GIÂY: giả lập bấm nút Next (mũi tên phải). Nếu không có nút thì fallback gọi hàm.
+      setTimeout(() => {
+        const nextBtn = document.querySelector('.mobile-layout .next-button');
+        if (nextBtn) {
+          nextBtn.click();
+        } else {
           goToPageMobile(2, true);
+          const v2 = mobVideos[1];
           if (v2){ v2.preload = 'auto'; safePlay(v2); }
         }
-
-        if (v1){
-          v1.preload = 'auto';
-          v1.muted = true;
-          playWithGesture(v1);
-          v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
-
-          const onEnded = () => {
-            v1.removeEventListener('ended', onEnded);
-            v1.removeEventListener('timeupdate', onTimeUpdate);
-            gotoSecond();
-          };
-          const onTimeUpdate = () => {
-            if (v1.duration && (v1.duration - v1.currentTime) <= 0.25) {
-              v1.removeEventListener('timeupdate', onTimeUpdate);
-              v1.removeEventListener('ended', onEnded);
-              gotoSecond();
-            }
-          };
-          v1.addEventListener('ended', onEnded, { once:true });
-          v1.addEventListener('timeupdate', onTimeUpdate);
-        } else {
-          gotoSecond();
-        }
-      }
+      }, 5000);
     }
 
     if (zaloCta) {
