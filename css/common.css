@@ -83,5 +83,3 @@ video {
   .logo-loader img { animation: none; }
   #overlayReload { transition: none; }
 }
-#overlayReload { display:none; }
-#overlayReload.show { display:flex; }
