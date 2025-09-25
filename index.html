@@ -129,7 +129,7 @@
   </div>
 
   <!-- CTA chỉ cho Zalo mobile -->
-  <button id="zaloCta" type="button" aria-label="Xem thiệp mời">Xem thiệp mời 🎉  </button>
+  <button id="zaloCta" type="button" aria-label="Xem thiệp mời">🎉 Xem thiệp mời</button>
 
  <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
@@ -236,62 +236,31 @@
       zaloCta.style.display = 'inline-flex';
     }
 
-    // —— CẬP NHẬT: bấm CTA => về TRANG 1, phát video 1; khi xong tự sang TRANG 2 và phát video 2
+    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, SAU 5 GIÂY auto "bấm" nút phải để sang Trang 2
     function playInviteNow(){
       // Về Trang 1 và phát video 1 bằng gesture
       goToPageMobile(1, true);
       const v1 = mobVideos[0];
-      const v2 = mobVideos[1];
-
-      if (!v1){
-        // Không có video 1 -> nhảy thẳng Trang 2 và phát
-        goToPageMobile(2, true);
-        if (v2){ v2.preload='auto'; playWithGesture(v2); }
+      if (v1){
+        v1.preload = 'auto';
+        v1.muted = true;
+        playWithGesture(v1);
+        v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
+      } else {
         if (zaloCta) zaloCta.style.display = 'none';
-        return;
       }
 
-      // Phát video 1
-      v1.preload = 'auto';
-      v1.muted = true;
-      playWithGesture(v1);
-
-      // Ẩn CTA khi video 1 bắt đầu chạy
-      const hideCTA = () => {
-        if (zaloCta) zaloCta.style.display = 'none';
-        v1.removeEventListener('playing', hideCTA);
-      };
-      v1.addEventListener('playing', hideCTA, { once:true });
-
-      // Khi video 1 kết thúc -> sang Trang 2 và phát video 2
-      const toPage2 = () => {
-        goToPageMobile(2, true);
-        if (v2){
-          v2.preload = 'auto';
-          // Đang trong cùng phiên gesture + muted, play an toàn
-          safePlay(v2);
-        }
-      };
-      v1.addEventListener('ended', toPage2, { once:true });
-
-      // Dự phòng: nếu 'ended' không bắn, căn theo duration
-      const scheduleFallback = () => {
-        if (isFinite(v1.duration) && v1.duration > 0){
-          const delay = Math.max(400, (v1.duration - 0.05) * 1000);
-          setTimeout(() => {
-            // Nếu vẫn còn ở Trang 1 thì chuyển
-            const m = sliderMobile?.style.transform || '';
-            const match = m.match(/translateX\(-(\d+)%\)/);
-            const onPage1 = !match || parseInt(match[1],10) < 50;
-            if (onPage1) toPage2();
-          }, delay);
+      // SAU 5 GIÂY: giả lập bấm nút Next (mũi tên phải). Nếu không có nút thì fallback gọi hàm.
+      setTimeout(() => {
+        const nextBtn = document.querySelector('.mobile-layout .next-button');
+        if (nextBtn) {
+          nextBtn.click();
         } else {
-          // Không đọc được duration -> nhảy sau 6 giây
-          setTimeout(toPage2, 6000);
+          goToPageMobile(2, true);
+          const v2 = mobVideos[1];
+          if (v2){ v2.preload = 'auto'; safePlay(v2); }
         }
-      };
-      if (v1.readyState >= 1) scheduleFallback();
-      else v1.addEventListener('loadedmetadata', scheduleFallback, { once:true });
+      }, 5000);
     }
 
     if (zaloCta) {
