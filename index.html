@@ -24,9 +24,8 @@
   <link rel="stylesheet" href="./css/desktop.css">
   <link rel="stylesheet" href="./css/mobile.css">
 
-  <!-- Ẩn control WebKit + cấu hình shield (chỉ tác dụng mobile) -->
+  <!-- Ẩn control WebKit (tránh hiện timeline) -->
   <style>
-  /* Ẩn tối đa các control hệ thống */
   .mob-video::-webkit-media-controls,
   .mob-video::-webkit-media-controls-enclosure,
   .mob-video::-webkit-media-controls-panel,
@@ -42,57 +41,32 @@
     visibility: hidden !important;
   }
 
-  /* Điều khiển overlay */
+  /* Overlay */
   #overlayReload { display:none; }
   #overlayReload.show { display:flex; }
 
-  /* Slide mobile cần position để đặt shield */
-  .mobile-layout .slide { position: relative; }
-
-  /* Lớp chắn chạm để không bật UI video trong Zalo (tùy chọn) */
-  .touch-shield {
-    position: absolute; inset: 0;
-    background: transparent;
-    z-index: 2;           /* cao hơn video */
-    display: none;        /* chỉ bật trong Zalo nếu muốn */
-    pointer-events: auto; /* chặn chạm vào video */
-  }
-
-  /* Đảm bảo nút Prev/Next & CTA nổi trên shield */
-  .mobile-layout .prev-button,
-  .mobile-layout .next-button,
+  /* CTA căn giữa (sẽ hiện trong Zalo theo JS) */
   #zaloCta {
-    z-index: 9999;
     position: fixed;
-  }
-
-  /* CTA cho Zalo mobile — CĂN GIỮA MÀN HÌNH (mobile khác giữ nguyên behavior hiện tại của bạn) */
-  #zaloCta {
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    display: none; /* chỉ bật theo logic JS */
+    z-index: 9999;
+    display: none;
     padding: 16px 22px;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
-    border: 0;
-    border-radius: 999px;
-    background: #0068ff;
-    color: #fff;
+    font-size: 18px; font-weight: 700; line-height: 1;
+    border: 0; border-radius: 999px;
+    background: #0068ff; color:#fff;
     box-shadow: 0 10px 28px rgba(0,0,0,.25);
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    text-align: center;
-    white-space: nowrap;
+    text-align: center; white-space: nowrap;
   }
-  #zaloCta:active { transform: translate(-50%, -50%) scale(.98); }
-</style>
+  #zaloCta:active { transform: translate(-50%,-50%) scale(.98); }
+  </style>
 </head>
 
 <body>
 
-  <!-- Overlay với logo quay (không crop, responsive) -->
+  <!-- Overlay -->
   <div id="overlayReload">
     <div class="logo-loader">
       <img src="https://phucbinh.com.vn/wp-content/uploads/2023/03/cropped-Group-8-180x180.png" alt="Phucbinh Group">
@@ -116,8 +90,6 @@
           </video>
         </div>
       </div>
-
-      <!-- Nút điều hướng -->
       <button class="prev-button" onclick="goToPageDesktop(1, true)">&#10094;</button>
       <button class="next-button" onclick="goToPageDesktop(2, true)">&#10095;</button>
     </div>
@@ -138,7 +110,6 @@
                  controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
             <source src="./data/1mobile.mp4" type="video/mp4"/>
           </video>
-          <div class="touch-shield"></div>
         </div>
         <!-- Trang 2 -->
         <div class="slide">
@@ -151,11 +122,9 @@
                  controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
             <source src="./data/2mobile.mp4" type="video/mp4"/>
           </video>
-          <div class="touch-shield"></div>
         </div>
       </div>
 
-      <!-- Nút điều hướng -->
       <button class="button prev-button" onclick="goToPageMobile(1, true)">&#10094;</button>
       <button class="button next-button" onclick="goToPageMobile(2, true)">&#10095;</button>
     </div>
@@ -164,162 +133,123 @@
   <!-- CTA -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">🎉 Xem thiệp mời</button>
 
- <script>
+  <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
 
     const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
     const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
+    const zaloCta    = document.getElementById('zaloCta');
 
-    function resetAll(videos) {
-      videos.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
-    }
-    resetAll(deskVideos);
-    resetAll(mobVideos);
+    function resetAll(videos){ videos.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} }); }
 
-    /* ==== Desktop: giữ như cũ ==== */
-    function goToPageDesktop(page, restart=false) {
+    /* ==== Desktop giữ nguyên ==== */
+    function goToPageDesktop(page, restart=false){
       const offset = (page - 1) * 50;
       if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
       resetAll(deskVideos);
-      const idx = page - 1;
-      const target = deskVideos[idx];
-      if (target) {
-        if (restart) target.currentTime = 0;
-        safePlay(target);
-      }
+      const v = deskVideos[page-1];
+      if (v){ if (restart) v.currentTime = 0; safePlay(v); }
     }
 
-    /* ==== Mobile: phát ngay như desktop ==== */
-    function goToPageMobile(page, restart=false) {
+    /* ==== Mobile giữ nguyên ==== */
+    function goToPageMobile(page, restart=false){
       const offset = (page - 1) * 50;
       if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
-
       resetAll(mobVideos);
-
-      const idx = page - 1;
-      const target = mobVideos[idx];
-      if (!target) return;
-
-      target.preload = 'auto';
-      if (restart) target.currentTime = 0;
-
-      safePlay(target); // auto play "an toàn"
+      const v = mobVideos[page-1];
+      if (!v) return;
+      v.preload = 'auto';
+      if (restart) v.currentTime = 0;
+      safePlay(v);
     }
 
-    function playWithGesture(videoEl) {
-      try {
+    function playWithGesture(videoEl){
+      try{
         videoEl.muted = true;
         videoEl.setAttribute('playsinline','');
         videoEl.setAttribute('webkit-playsinline','');
         const p = videoEl.play();
-        if (p && typeof p.then === 'function') {
-          p.then(()=>{}).catch(() => {
+        if (p && typeof p.then === 'function'){
+          p.then(()=>{}).catch(()=>{
             videoEl.load();
             const onReady = () => { videoEl.removeEventListener('canplay', onReady); videoEl.play().catch(()=>{}); };
             videoEl.addEventListener('canplay', onReady, { once:true });
           });
         }
-      } catch (e) {
-        try {
+      }catch(e){
+        try{
           videoEl.load();
-          videoEl.addEventListener('canplay', () => videoEl.play().catch(()=>{}), { once:true });
-        } catch (_) {}
+          videoEl.addEventListener('canplay', ()=> videoEl.play().catch(()=>{}), { once:true });
+        }catch(_){}
       }
     }
 
-    function safePlay(videoEl) {
+    function safePlay(videoEl){
       videoEl.load();
-      const go = () => videoEl.play().catch(() => {});
+      const go = ()=> videoEl.play().catch(()=>{});
       if (videoEl.readyState >= 2) go();
       else videoEl.addEventListener('canplay', go, { once:true });
     }
 
-    document.querySelectorAll('.mobile-layout .button').forEach(btn=>{
-      btn.addEventListener('touchend', e => { e.currentTarget.click(); }, { passive:true });
-    });
-
-    function softReload() {
-      overlay.classList.add('show');
-      resetAll(deskVideos); resetAll(mobVideos);
-      [...deskVideos, ...mobVideos].forEach(v => {
-        const srcEl = v.querySelector('source');
-        if (!srcEl) return;
-        try {
-          const url = new URL(srcEl.getAttribute('src'), location.href);
-          url.searchParams.set('_r', Date.now().toString());
-          srcEl.setAttribute('src', url.toString());
-          v.load();
-        } catch (e) { v.load(); }
-      });
-      let done = false;
-      const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
-      setTimeout(off, 3000);
-      const anyVideo = deskVideos[0] || mobVideos[0];
-      if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
-    }
-
-    // ==== Nhận diện môi trường ====
+    // ==== Detect Zalo ====
     const isMobile = /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent);
     const isZalo   = /zalo/i.test(navigator.userAgent);
-    const zaloCta  = document.getElementById('zaloCta');
 
-    // Chỉ sửa hành vi khi mở trong Zalo, mobile khác giữ nguyên
-    if (isMobile && isZalo) {
-      // 1) Dùng video riêng ./data/zalo.mp4 cho cả 2 slide mobile
-      (function useZaloVideoForMobile(){
-        const zaloSrc = './data/zalo.mp4';
-        mobVideos.forEach(v => {
-          const srcEl = v.querySelector('source');
-          if (srcEl) {
-            const current = srcEl.getAttribute('src') || '';
-            if (!/\/data\/zalo\.mp4(\?|$)/.test(current)) {
-              srcEl.setAttribute('src', zaloSrc);
-              v.load();
-            }
-          }
-          v.removeAttribute('controls');
-          v.setAttribute('playsinline','');
-          v.setAttribute('webkit-playsinline','');
-          v.setAttribute('muted','');
-          v.muted = true;
-        });
-      })();
-
-      // 2) Hiện CTA trên Zalo theo yêu cầu
+    // === Chỉ trong Zalo: đổi nguồn sang ./data/zalo.mp4 + auto phát Trang 1 ===
+    if (isMobile && isZalo){
+      // Hiện CTA trong Zalo (yêu cầu mới)
       if (zaloCta) zaloCta.style.display = 'inline-flex';
 
-      // 3) (Tuỳ chọn) bật shield chống UI native nếu bạn muốn
-      // Array.from(document.querySelectorAll('.mobile-layout .touch-shield')).forEach(sh => sh.style.display = 'block');
+      // Đổi nguồn 2 video sang zalo.mp4
+      const zaloSrc = './data/zalo.mp4';
+      mobVideos.forEach(v=>{
+        const srcEl = v.querySelector('source');
+        if (srcEl){
+          const cur = srcEl.getAttribute('src') || '';
+          if (!/\/data\/zalo\.mp4(\?|$)/.test(cur)){
+            srcEl.setAttribute('src', zaloSrc);
+            v.load();
+          }
+        }
+        v.removeAttribute('controls');
+        v.setAttribute('playsinline','');
+        v.setAttribute('webkit-playsinline','');
+        v.setAttribute('muted','');
+        v.muted = true;
+      });
 
-      // 4) Về Trang 1 và auto phát
+      // Auto về Trang 1 và phát ngay
       goToPageMobile(1, true);
+      const v1 = mobVideos[0];
+      if (v1){ v1.preload='auto'; v1.muted = true; safePlay(v1); }
+
+      // KHÔNG auto nhảy sau 5s nữa (đã bỏ theo yêu cầu)
+    } else {
+      // Mobile thường & PC: để nguyên như đang có (không ép hiển thị/ẩn CTA)
+    }
+
+    // === Nút CTA: bấm để phát zalo.mp4 (Trang 1) bằng gesture, chỉ tác dụng nếu đang ở Zalo (nhưng vẫn an toàn khi ở nơi khác)
+    function playInviteNow(){
+      // Về Trang 1
+      goToPageMobile(1, true);
+
+      // Phát video Trang 1 (trong Zalo là zalo.mp4; nơi khác là 1mobile.mp4 — vẫn OK)
       const v1 = mobVideos[0];
       if (v1){
         v1.preload = 'auto';
-        v1.muted = true;
-        safePlay(v1);
+        v1.muted   = true;
+        playWithGesture(v1); // gesture để chắc chắn play trong Zalo
       }
-
-      // 5) Sau 5 giây tự sang Trang 2 (ưu tiên click nút next nếu có)
-      setTimeout(() => {
-        const nextBtn = document.querySelector('.mobile-layout .next-button');
-        if (nextBtn) {
-          nextBtn.click();
-        } else {
-          goToPageMobile(2, true);
-        }
-        const v2 = mobVideos[1];
-        if (v2){
-          v2.preload = 'auto';
-          safePlay(v2);
-        }
-      }, 5000);
     }
-    // ⚠️ Không có else: mobile/desktop ngoài Zalo giữ nguyên hành vi sẵn có
 
-    // ===== Mặc định hiển thị trang 1 =====
+    if (zaloCta){
+      zaloCta.addEventListener('click', playInviteNow);
+      zaloCta.addEventListener('touchend', e => { e.preventDefault(); playInviteNow(); }, { passive:false });
+    }
+
+    // ===== Khởi tạo mặc định =====
     goToPageDesktop(1, false);
     goToPageMobile(1, false);
   </script>
