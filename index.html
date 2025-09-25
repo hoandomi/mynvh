@@ -72,8 +72,8 @@
         <div class="slide">
           <!-- Mobile: mở web đen, không tự chạy; chỉ chạy khi bấm -->
           <video class="mob-video"
-                 preload="none"
-                 poster=""
+                 preload="auto"
+                 autoplay
                  muted playsinline webkit-playsinline
                  x5-playsinline x5-video-player-type="h5"
                  disablepictureinpicture
@@ -130,23 +130,20 @@
 
     /* ==== Mobile: phát ngay trong gesture click/touch (hợp Zalo) ==== */
     function goToPageMobile(page, restart=false) {
-      const offset = (page - 1) * 50;
-      if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+  const offset = (page - 1) * 50;
+  if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
 
-      resetAll(mobVideos);
+  resetAll(mobVideos);
 
-      const idx = page - 1;
-      const target = mobVideos[idx];
-      if (!target) return;
+  const idx = page - 1;
+  const target = mobVideos[idx];
+  if (!target) return;
 
-      target.preload = 'auto';          // chỉ bật tải khi bấm
-      if (restart) target.currentTime = 0;
+  target.preload = 'auto';
+  if (restart) target.currentTime = 0;
 
-      // Gỡ poster để không còn nền đen khi bắt đầu phát
-      if (target.hasAttribute('poster')) target.removeAttribute('poster');
-
-      playWithGesture(target);
-    }
+  safePlay(target); // auto play như desktop
+}
 
     // Phát NGAY trong gesture; nếu bị chặn → fallback chờ canplay
     function playWithGesture(videoEl) {
@@ -211,4 +208,5 @@
 
 </body>
 </html>
+
 
