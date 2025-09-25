@@ -38,7 +38,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* căn giữa ngang + dọc */
+    transform: translate(-50%, -50%);
     z-index: 9999;
     display: none; /* chỉ bật khi phát hiện Zalo */
     padding: 16px 22px;
@@ -56,7 +56,7 @@
     white-space: nowrap;
   }
   #zaloCta:active { transform: translate(-50%, -50%) scale(.98); }
-</style>
+  </style>
 </head>
 
 <body>
@@ -131,7 +131,7 @@
   <!-- CTA chỉ cho Zalo mobile -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">🎉 Xem thiệp mời</button>
 
- <script>
+  <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
@@ -236,31 +236,59 @@
       zaloCta.style.display = 'inline-flex';
     }
 
-    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, SAU 5 GIÂY auto "bấm" nút phải để sang Trang 2
+    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, KHI HẾT Trang 1 thì auto sang Trang 2 (không dùng timer)
     function playInviteNow(){
-      // Về Trang 1 và phát video 1 bằng gesture
+      // Về Trang 1 và phát video 1 bằng gesture (đảm bảo hợp Zalo)
       goToPageMobile(1, true);
       const v1 = mobVideos[0];
-      if (v1){
-        v1.preload = 'auto';
-        v1.muted = true;
-        playWithGesture(v1);
-        v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
-      } else {
+      const v2 = mobVideos[1];
+      let advanced = false;
+
+      function gotoSecond(){
+        if (advanced) return;
+        advanced = true;
+
         if (zaloCta) zaloCta.style.display = 'none';
+
+        // Chuyển sang Trang 2 và phát v2
+        goToPageMobile(2, true);
+        if (v2){
+          v2.preload = 'auto';
+          safePlay(v2);
+        }
       }
 
-      // SAU 5 GIÂY: giả lập bấm nút Next (mũi tên phải). Nếu không có nút thì fallback gọi hàm.
-      setTimeout(() => {
-        const nextBtn = document.querySelector('.mobile-layout .next-button');
-        if (nextBtn) {
-          nextBtn.click();
-        } else {
-          goToPageMobile(2, true);
-          const v2 = mobVideos[1];
-          if (v2){ v2.preload = 'auto'; safePlay(v2); }
-        }
-      }, 5000);
+      if (v1){
+        v1.preload = 'auto';
+        v1.muted = true; // buộc mute để không bị chặn play
+        playWithGesture(v1);
+
+        // Ẩn CTA ngay khi v1 bắt đầu chạy
+        v1.addEventListener('playing', () => {
+          if (zaloCta) zaloCta.style.display = 'none';
+        }, { once:true });
+
+        // 1) Bình thường: hết video thì nhảy
+        const onEnded = () => {
+          v1.removeEventListener('ended', onEnded);
+          v1.removeEventListener('timeupdate', onTimeUpdate);
+          gotoSecond();
+        };
+        v1.addEventListener('ended', onEnded, { once:true });
+
+        // 2) Fallback cho trường hợp Zalo không bắn 'ended'
+        const onTimeUpdate = () => {
+          if (v1.duration && (v1.duration - v1.currentTime) <= 0.25) {
+            v1.removeEventListener('timeupdate', onTimeUpdate);
+            v1.removeEventListener('ended', onEnded);
+            gotoSecond();
+          }
+        };
+        v1.addEventListener('timeupdate', onTimeUpdate);
+      } else {
+        // Không tìm thấy v1 thì chuyển thẳng Trang 2
+        gotoSecond();
+      }
     }
 
     if (zaloCta) {
