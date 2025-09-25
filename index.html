@@ -197,13 +197,13 @@
     const isMobile = /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent);
     const isZalo   = /zalo/i.test(navigator.userAgent);
 
-    // === Chỉ trong Zalo: đổi nguồn sang ./data/zalo.mp4 + auto phát Trang 1 ===
+    // === Chỉ trong Zalo: đổi nguồn sang ./data/zalo.mp4 + auto phát Trang 1 (KHÔNG auto nhảy sau 5s) ===
     if (isMobile && isZalo){
-      // Hiện CTA trong Zalo (yêu cầu mới)
+      // Hiện CTA trong Zalo
       if (zaloCta) zaloCta.style.display = 'inline-flex';
 
-      // Đổi nguồn 2 video sang zalo.mp4
-      const zaloSrc = '/data/zalo.mp4';
+      // Đổi nguồn 2 video sang zalo.mp4 (và đảm bảo inline/muted)
+      const zaloSrc = './data/zalo.mp4';
       mobVideos.forEach(v=>{
         const srcEl = v.querySelector('source');
         if (srcEl){
@@ -216,6 +216,8 @@
         v.removeAttribute('controls');
         v.setAttribute('playsinline','');
         v.setAttribute('webkit-playsinline','');
+        v.setAttribute('x5-playsinline','');
+        v.setAttribute('x5-video-player-type','h5');
         v.setAttribute('muted','');
         v.muted = true;
       });
@@ -225,23 +227,83 @@
       const v1 = mobVideos[0];
       if (v1){ v1.preload='auto'; v1.muted = true; safePlay(v1); }
 
-      // KHÔNG auto nhảy sau 5s nữa (đã bỏ theo yêu cầu)
+      // KHÔNG auto nhảy sau 5s nữa
     } else {
-      // Mobile thường & PC: để nguyên như đang có (không ép hiển thị/ẩn CTA)
+      // Mobile thường & PC: giữ nguyên
     }
 
-    // === Nút CTA: bấm để phát zalo.mp4 (Trang 1) bằng gesture, chỉ tác dụng nếu đang ở Zalo (nhưng vẫn an toàn khi ở nơi khác)
+    // === Nút CTA: bấm để phát zalo.mp4 (Trang 1) bằng gesture, ép play nhiều lớp (chỉ-thật-sự cần cho Zalo) ===
     function playInviteNow(){
-      // Về Trang 1
+      const isZaloNow = /zalo/i.test(navigator.userAgent);
+
+      // 1) Nếu là Zalo: đảm bảo 2 video đã trỏ về ./data/zalo.mp4 và reload trong chính gesture
+      if (isZaloNow){
+        const zaloSrc = './data/zalo.mp4';
+        mobVideos.forEach(v=>{
+          const srcEl = v.querySelector('source');
+          if (srcEl){
+            const cur = (srcEl.getAttribute('src') || '').trim();
+            if (!/\/data\/zalo\.mp4(\?|$)/.test(cur)){
+              srcEl.setAttribute('src', zaloSrc);
+            }
+          }
+          v.removeAttribute('controls');
+          v.setAttribute('playsinline','');
+          v.setAttribute('webkit-playsinline','');
+          v.setAttribute('x5-playsinline','');
+          v.setAttribute('x5-video-player-type','h5');
+          v.setAttribute('muted','');
+          v.muted = true;
+          v.load(); // reload ngay trong gesture
+        });
+      }
+
+      // 2) Về Trang 1
       goToPageMobile(1, true);
 
-      // Phát video Trang 1 (trong Zalo là zalo.mp4; nơi khác là 1mobile.mp4 — vẫn OK)
+      // 3) Ép phát video Trang 1
       const v1 = mobVideos[0];
-      if (v1){
-        v1.preload = 'auto';
-        v1.muted   = true;
-        playWithGesture(v1); // gesture để chắc chắn play trong Zalo
+      if (!v1) return;
+
+      v1.preload = 'auto';
+      v1.muted   = true;
+      v1.setAttribute('muted','');
+      v1.setAttribute('playsinline','');
+      v1.setAttribute('webkit-playsinline','');
+      v1.currentTime = 0;
+
+      // Gọi play ngay + fallback nhiều lần nếu bị chặn
+      let attempts = 0;
+      const tryPlay = () => {
+        attempts++;
+        const p = v1.play();
+        if (p && typeof p.then === 'function') {
+          p.then(()=>{}).catch(()=>{
+            if (attempts < 4) setTimeout(tryPlay, 200);
+          });
+        }
+      };
+
+      if (v1.readyState >= 2) {
+        tryPlay();
+      } else {
+        v1.addEventListener('canplay', tryPlay, { once:true });
+        setTimeout(tryPlay, 350);
       }
+
+      // (tuỳ chọn) ẩn CTA sau khi phát
+      const hideCTA = () => {
+        const btn = document.getElementById('zaloCta');
+        if (btn) btn.style.display = 'none';
+        v1.removeEventListener('playing', hideCTA);
+      };
+      v1.addEventListener('playing', hideCTA, { once:true });
+
+      // (tuỳ chọn) nếu bị pause ngoài ý muốn, tự phát lại
+      v1.addEventListener('pause', () => {
+        v1.muted = true;
+        v1.play().catch(()=>{});
+      });
     }
 
     if (zaloCta){
@@ -256,4 +318,3 @@
 
 </body>
 </html>
-
