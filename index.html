@@ -26,9 +26,13 @@
 
   <!-- Ẩn mọi control WebKit cho mobile video đề phòng hệ thống tự hiện -->
   <style>
-    .mob-video::-webkit-media-controls,
-    .mob-video::-webkit-media-controls-enclosure { display: none !important; }
-  </style>
+  .mob-video::-webkit-media-controls,
+  .mob-video::-webkit-media-controls-enclosure { display: none !important; }
+
+  /* Điều khiển overlay */
+  #overlayReload { display:none; }
+  #overlayReload.show { display:flex; }
+</style>
 </head>
 
 <body>
@@ -258,6 +262,7 @@
 
 </body>
 </html>
+
 
 
 
