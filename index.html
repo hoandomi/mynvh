@@ -101,111 +101,164 @@
     </div>
   </div>
  <script>
-    const sliderDesktop = document.getElementById("sliderDesktop");
-    const sliderMobile  = document.getElementById("sliderMobile");
-    const overlay       = document.getElementById("overlayReload");
+  // ===== DOM =====
+  const sliderDesktop = document.getElementById("sliderDesktop");
+  const sliderMobile  = document.getElementById("sliderMobile");
+  const overlay       = document.getElementById("overlayReload");
 
-    const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
-    const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
+  const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
+  const mobVideos  = Array.from(document.querySelectorAll(".mob-video"));
 
-    function resetAll(videos) {
-      videos.forEach(v => { try { v.pause(); v.currentTime = 0; } catch(e){} });
-    }
+  // ===== Helper =====
+  function resetAll(videos) { videos.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(_){} }); }
+
+  function ensureAttrs(v){
+    if (!v) return;
+    v.muted = true; v.autoplay = true; v.preload = 'auto';
+    v.setAttribute('muted',''); v.setAttribute('autoplay',''); v.setAttribute('preload','auto');
+    v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    if (v.hasAttribute('poster')) v.removeAttribute('poster');
+  }
+
+  function safePlay(v){
+    if (!v) return;
+    try{
+      v.load();
+      const go = () => v.play().catch(()=>{});
+      (v.readyState >= 2) ? go() : v.addEventListener('canplay', go, {once:true});
+    }catch(_){}
+  }
+
+  // Gắn log lỗi để bắt 404/MIME
+  function attachDebug(v, label){
+    if (!v || v._debugged) return;
+    v._debugged = true;
+    v.addEventListener('error', () => {
+      const s = v.querySelector('source');
+      console.warn(`[VIDEO ERROR][${label}]`, s ? s.src : '(no source)', v.error);
+      // Thử reload 1 lần sau 300ms
+      setTimeout(()=>{ try{ v.load(); v.play().catch(()=>{}); }catch(_){ } }, 300);
+    });
+  }
+
+  // ===== Desktop =====
+  function goToPageDesktop(page, restart=false) {
+    const offset = (page - 1) * 50;
+    if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
     resetAll(deskVideos);
+
+    const v = deskVideos[page-1];
+    if (!v) return;
+    ensureAttrs(v);
+    if (restart) try{ v.currentTime = 0; }catch(_){}
+    safePlay(v);
+    attachDebug(v, `desktop-${page}`);
+  }
+
+  // ===== Mobile =====
+  function goToPageMobile(page, restart=false) {
+    const offset = (page - 1) * 50;
+    if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
     resetAll(mobVideos);
 
-    /* ==== Desktop: giữ như cũ ==== */
-    function goToPageDesktop(page, restart=false) {
-      const offset = (page - 1) * 50;
-      if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
-      resetAll(deskVideos);
-      const idx = page - 1;
-      const target = deskVideos[idx];
-      if (target) {
-        if (restart) target.currentTime = 0;
-        safePlay(target);
-      }
+    const v = mobVideos[page-1];
+    if (!v) return;
+    ensureAttrs(v);
+    if (restart) try{ v.currentTime = 0; }catch(_){}
+    safePlay(v);
+    attachDebug(v, `mobile-${page}`);
+  }
+
+  // Bridge touchend -> click (webview)
+  document.querySelectorAll('.mobile-layout .button, .mobile-layout .next-button, .mobile-layout .prev-button')
+    .forEach(btn => btn.addEventListener('touchend', e => { e.currentTarget.click(); }, { passive:true }));
+
+  // ===== Boot bằng GESTURE MỘT LẦN (fix WebView chặn autoplay) =====
+  let bootstrapped = false;
+  function bootstrapAutoplayOnce(){
+    if (bootstrapped) return;
+    bootstrapped = true;
+    // Ẩn overlay nếu đang che
+    if (overlay) overlay.classList.remove('show');
+
+    // Ép lại & play video đang hiển thị ở cả 2 layout
+    const curM = currentMobileIndex, curD = currentDesktopIndex;
+    ensureAttrs(mobVideos[curM]);  safePlay(mobVideos[curM]);
+    ensureAttrs(deskVideos[curD]); safePlay(deskVideos[curD]);
+  }
+  // Lắng nghe lần chạm/scroll/phím… đầu tiên
+  ['touchstart','click','keydown','wheel'].forEach(evt=>{
+    window.addEventListener(evt, bootstrapAutoplayOnce, { once:true, passive:true });
+  });
+
+  // ===== Pause/Resume khi ẩn tab =====
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      [...deskVideos, ...mobVideos].forEach(v => { try{ v.pause(); }catch(_){ } });
+    } else {
+      const vM = mobVideos[currentMobileIndex], vD = deskVideos[currentDesktopIndex];
+      ensureAttrs(vM); ensureAttrs(vD); safePlay(vM); safePlay(vD);
     }
+  });
 
-    /* ==== Mobile: phát ngay trong gesture click/touch (hợp Zalo) ==== */
-    function goToPageMobile(page, restart=false) {
-  const offset = (page - 1) * 50;
-  if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+  // ===== Track index =====
+  let currentMobileIndex = 0;
+  let currentDesktopIndex = 0;
 
-  resetAll(mobVideos);
+  const _goToPageMobile = goToPageMobile;
+  const _goToPageDesktop = goToPageDesktop;
 
-  const idx = page - 1;
-  const target = mobVideos[idx];
-  if (!target) return;
+  goToPageMobile = function(page, restart=false){
+    currentMobileIndex = Math.max(0, Math.min(page - 1, mobVideos.length - 1));
+    _goToPageMobile(page, restart);
+  }
+  goToPageDesktop = function(page, restart=false){
+    currentDesktopIndex = Math.max(0, Math.min(page - 1, deskVideos.length - 1));
+    _goToPageDesktop(page, restart);
+  }
 
-  target.preload = 'auto';
-  if (restart) target.currentTime = 0;
+  // ===== Init =====
+  (function init(){
+    // Đảm bảo overlay không che
+    if (overlay) overlay.classList.remove('show');
 
-  safePlay(target); // auto play như desktop
-}
+    // Ép attrs trước
+    deskVideos.forEach(v => { ensureAttrs(v); attachDebug(v, 'desktop-init'); });
+    mobVideos .forEach(v => { ensureAttrs(v); attachDebug(v, 'mobile-init');  });
 
-    // Phát NGAY trong gesture; nếu bị chặn → fallback chờ canplay
-    function playWithGesture(videoEl) {
+    // Mở trang 1, cố play ngay
+    goToPageDesktop(1, true);
+    goToPageMobile(1, true);
+  })();
+
+  // ===== Soft reload (tuỳ chọn) =====
+  function softReload() {
+    if (!overlay) return;
+    overlay.classList.add('show');
+    resetAll(deskVideos); resetAll(mobVideos);
+
+    [...deskVideos, ...mobVideos].forEach(v => {
+      const s = v.querySelector('source');
+      if (!s) return;
       try {
-        videoEl.muted = true;
-        videoEl.setAttribute('playsinline','');
-        videoEl.setAttribute('webkit-playsinline','');
-        const p = videoEl.play();
-        if (p && typeof p.then === 'function') {
-          p.then(()=>{}).catch(() => {
-            videoEl.load();
-            const onReady = () => { videoEl.removeEventListener('canplay', onReady); videoEl.play().catch(()=>{}); };
-            videoEl.addEventListener('canplay', onReady, { once:true });
-          });
-        }
-      } catch (e) {
-        try {
-          videoEl.load();
-          videoEl.addEventListener('canplay', () => videoEl.play().catch(()=>{}), { once:true });
-        } catch (_) {}
-      }
-    }
-
-    // Tự động phát an toàn (Desktop)
-    function safePlay(videoEl) {
-      videoEl.load();
-      const go = () => videoEl.play().catch(() => {});
-      if (videoEl.readyState >= 2) go();
-      else videoEl.addEventListener('canplay', go, { once:true });
-    }
-
-    /* ==== Bridge touchend -> click để Zalo bắt gesture ổn định ==== */
-    document.querySelectorAll('.mobile-layout .button').forEach(btn=>{
-      btn.addEventListener('touchend', e => { e.currentTarget.click(); }, { passive:true });
+        const u = new URL(s.getAttribute('src'), location.href);
+        u.searchParams.set('_r', Date.now().toString());
+        s.setAttribute('src', u.toString());
+        v.load();
+      } catch (e) { v.load(); }
     });
 
-    /* ==== Reload mềm (nếu cần) ==== */
-    function softReload() {
-      overlay.classList.add('show');
-      resetAll(deskVideos); resetAll(mobVideos);
-      [...deskVideos, ...mobVideos].forEach(v => {
-        const srcEl = v.querySelector('source');
-        if (!srcEl) return;
-        try {
-          const url = new URL(srcEl.getAttribute('src'), location.href);
-          url.searchParams.set('_r', Date.now().toString());
-          srcEl.setAttribute('src', url.toString());
-          v.load();
-        } catch (e) { v.load(); }
-      });
-      let done = false;
-      const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
-      setTimeout(off, 3000);
-      const anyVideo = deskVideos[0] || mobVideos[0];
-      if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
-    }
+    let done=false;
+    const off=()=>{ if(!done){ done=true; overlay.classList.remove('show'); } };
+    setTimeout(off, 3000);
+    const any = deskVideos[0] || mobVideos[0];
+    if (any) any.addEventListener('loadeddata', off, { once:true });
+  }
+</script>
 
-    // Mặc định hiển thị trang 1 (không tự chạy video)
-    goToPageDesktop(1, false);
-    goToPageMobile(1, false);
-  </script>
 </body>
 </html>
+
 
 
 
