@@ -38,7 +38,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); /* căn giữa ngang + dọc */
     z-index: 9999;
     display: none; /* chỉ bật khi phát hiện Zalo */
     padding: 16px 22px;
@@ -236,58 +236,88 @@
       zaloCta.style.display = 'inline-flex';
     }
 
-    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, KHI HẾT Trang 1 thì auto sang Trang 2 (không dùng timer)
+    // —— BẤM CTA (Zalo: phát ./data/zalo.mp4; Trình duyệt khác: giữ luồng cũ)
     function playInviteNow(){
-      // Về Trang 1 và phát video 1 bằng gesture (đảm bảo hợp Zalo)
-      goToPageMobile(1, true);
-      const v1 = mobVideos[0];
-      const v2 = mobVideos[1];
-      let advanced = false;
+      if (isMobile && isZalo) {
+        // ===== CHẾ ĐỘ ZALO: phát video riêng ./data/zalo.mp4 =====
+        resetAll(mobVideos); // dừng toàn bộ video đang có
 
-      function gotoSecond(){
-        if (advanced) return;
-        advanced = true;
+        // Tạo slide + video mới
+        const zaloWrapper = document.createElement("div");
+        zaloWrapper.className = "slide zalo-slide";
+        zaloWrapper.style.width = "100%";
+        zaloWrapper.style.height = "100%";
 
-        if (zaloCta) zaloCta.style.display = 'none';
+        const zaloVideo = document.createElement("video");
+        zaloVideo.className = "mob-video zalo-video";
+        zaloVideo.setAttribute("preload","auto");
+        zaloVideo.setAttribute("playsinline","");
+        zaloVideo.setAttribute("webkit-playsinline","");
+        zaloVideo.setAttribute("x5-playsinline","");
+        zaloVideo.setAttribute("x5-video-player-type","h5");
+        zaloVideo.setAttribute("disablepictureinpicture","");
+        zaloVideo.setAttribute("controlslist","nodownload noplaybackrate nofullscreen noremoteplayback");
+        zaloVideo.muted = true;
 
-        // Chuyển sang Trang 2 và phát v2
-        goToPageMobile(2, true);
-        if (v2){
-          v2.preload = 'auto';
-          safePlay(v2);
+        const source = document.createElement("source");
+        source.src = "./data/zalo.mp4";
+        source.type = "video/mp4";
+        zaloVideo.appendChild(source);
+        zaloWrapper.appendChild(zaloVideo);
+
+        // Thay slider bằng video Zalo duy nhất
+        if (sliderMobile){
+          sliderMobile.innerHTML = "";
+          sliderMobile.appendChild(zaloWrapper);
+          sliderMobile.style.transform = "translateX(0%)"; // chắc chắn ở trang đầu
         }
-      }
 
-      if (v1){
-        v1.preload = 'auto';
-        v1.muted = true; // buộc mute để không bị chặn play
-        playWithGesture(v1);
+        // Phát video bằng gesture
+        playWithGesture(zaloVideo);
 
-        // Ẩn CTA ngay khi v1 bắt đầu chạy
-        v1.addEventListener('playing', () => {
-          if (zaloCta) zaloCta.style.display = 'none';
+        // Ẩn CTA khi bắt đầu chạy
+        zaloVideo.addEventListener("playing", () => {
+          if (zaloCta) zaloCta.style.display = "none";
         }, { once:true });
 
-        // 1) Bình thường: hết video thì nhảy
-        const onEnded = () => {
-          v1.removeEventListener('ended', onEnded);
-          v1.removeEventListener('timeupdate', onTimeUpdate);
-          gotoSecond();
-        };
-        v1.addEventListener('ended', onEnded, { once:true });
-
-        // 2) Fallback cho trường hợp Zalo không bắn 'ended'
-        const onTimeUpdate = () => {
-          if (v1.duration && (v1.duration - v1.currentTime) <= 0.25) {
-            v1.removeEventListener('timeupdate', onTimeUpdate);
-            v1.removeEventListener('ended', onEnded);
-            gotoSecond();
-          }
-        };
-        v1.addEventListener('timeupdate', onTimeUpdate);
       } else {
-        // Không tìm thấy v1 thì chuyển thẳng Trang 2
-        gotoSecond();
+        // ===== KHÔNG PHẢI ZALO: giữ luồng cũ — Trang 1 -> hết -> Trang 2 =====
+        goToPageMobile(1, true);
+        const v1 = mobVideos[0];
+        const v2 = mobVideos[1];
+        let advanced = false;
+
+        function gotoSecond(){
+          if (advanced) return;
+          advanced = true;
+          if (zaloCta) zaloCta.style.display = 'none';
+          goToPageMobile(2, true);
+          if (v2){ v2.preload = 'auto'; safePlay(v2); }
+        }
+
+        if (v1){
+          v1.preload = 'auto';
+          v1.muted = true;
+          playWithGesture(v1);
+          v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
+
+          const onEnded = () => {
+            v1.removeEventListener('ended', onEnded);
+            v1.removeEventListener('timeupdate', onTimeUpdate);
+            gotoSecond();
+          };
+          const onTimeUpdate = () => {
+            if (v1.duration && (v1.duration - v1.currentTime) <= 0.25) {
+              v1.removeEventListener('timeupdate', onTimeUpdate);
+              v1.removeEventListener('ended', onEnded);
+              gotoSecond();
+            }
+          };
+          v1.addEventListener('ended', onEnded, { once:true });
+          v1.addEventListener('timeupdate', onTimeUpdate);
+        } else {
+          gotoSecond();
+        }
       }
     }
 
