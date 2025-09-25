@@ -38,9 +38,9 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* căn giữa ngang + dọc */
+    transform: translate(-50%, -50%);
     z-index: 9999;
-    display: none; /* chỉ bật khi phát hiện Zalo */
+    display: none;
     padding: 16px 22px;
     font-size: 18px;
     font-weight: 700;
@@ -172,7 +172,7 @@
       target.preload = 'auto';
       if (restart) target.currentTime = 0;
 
-      safePlay(target); // auto play như desktop
+      safePlay(target);
     }
 
     function playWithGesture(videoEl) {
@@ -238,7 +238,6 @@
 
     // —— CẬP NHẬT: bấm CTA => Trang 1 phát, SAU 5 GIÂY auto "bấm" nút phải để sang Trang 2
     function playInviteNow(){
-      // Về Trang 1 và phát video 1 bằng gesture
       goToPageMobile(1, true);
       const v1 = mobVideos[0];
       if (v1){
@@ -250,7 +249,6 @@
         if (zaloCta) zaloCta.style.display = 'none';
       }
 
-      // SAU 5 GIÂY: giả lập bấm nút Next (mũi tên phải). Nếu không có nút thì fallback gọi hàm.
       setTimeout(() => {
         const nextBtn = document.querySelector('.mobile-layout .next-button');
         if (nextBtn) {
@@ -268,9 +266,45 @@
       zaloCta.addEventListener('touchend', e => { e.preventDefault(); playInviteNow(); }, { passive:false });
     }
 
-    // ===== Mặc định hiển thị trang 1 =====
+    // ===== MẶC ĐỊNH =====
     goToPageDesktop(1, false);
-    goToPageMobile(1, false);
+
+    // Mobile: tự phát ngay khi mở link NẾU KHÔNG phải Zalo (giữ nguyên hành vi Zalo)
+    if (isMobile && !isZalo) {
+      const v1 = mobVideos[0];
+      if (v1) {
+        // đảm bảo điều kiện autoplay
+        v1.muted = true;
+        v1.setAttribute('muted','');
+        v1.setAttribute('playsinline','');
+        v1.setAttribute('webkit-playsinline','');
+        v1.preload = 'auto';
+        // ở trang 1
+        if (sliderMobile) sliderMobile.style.transform = 'translateX(0%)';
+
+        const tryPlay = () => v1.play().catch(()=>{});
+        if (v1.readyState >= 2) {
+          tryPlay();
+        } else {
+          v1.load();
+          v1.addEventListener('canplay', tryPlay, { once: true });
+        }
+
+        // nếu tab vừa active lại thì thử phát lại
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) v1.play().catch(()=>{});
+        }, { once: true });
+
+        // fallback: nếu vẫn bị chặn bởi một số trình duyệt, phát ở lần chạm đầu tiên
+        const firstTouchPlay = () => { v1.play().catch(()=>{}); window.removeEventListener('touchend', firstTouchPlay); };
+        window.addEventListener('touchend', firstTouchPlay, { passive: true });
+      } else {
+        goToPageMobile(1, false);
+      }
+    } else {
+      // Zalo hoặc không phải mobile: giữ nguyên
+      goToPageMobile(1, false);
+    }
   </script>
 
 </body>
