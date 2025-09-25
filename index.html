@@ -49,12 +49,12 @@
   /* Slide mobile cần position để đặt shield */
   .mobile-layout .slide { position: relative; }
 
-  /* Lớp chắn chạm để không bật UI video trong Zalo */
+  /* Lớp chắn chạm để không bật UI video trong Zalo (tùy chọn) */
   .touch-shield {
     position: absolute; inset: 0;
     background: transparent;
     z-index: 2;           /* cao hơn video */
-    display: none;        /* chỉ bật trong Zalo */
+    display: none;        /* chỉ bật trong Zalo nếu muốn */
     pointer-events: auto; /* chặn chạm vào video */
   }
 
@@ -66,12 +66,12 @@
     position: fixed;
   }
 
-  /* CTA cho Zalo mobile — CĂN GIỮA MÀN HÌNH (sẽ ẩn trong Zalo theo yêu cầu mới) */
+  /* CTA cho Zalo mobile — CĂN GIỮA MÀN HÌNH (mobile khác giữ nguyên behavior hiện tại của bạn) */
   #zaloCta {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: none; /* sẽ hiện ở mobile KHÔNG phải Zalo nếu cần */
+    display: none; /* chỉ bật theo logic JS */
     padding: 16px 22px;
     font-size: 18px;
     font-weight: 700;
@@ -161,7 +161,7 @@
     </div>
   </div>
 
-  <!-- CTA (sẽ ẩn khi ở Zalo theo yêu cầu) -->
+  <!-- CTA -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">🎉 Xem thiệp mời</button>
 
  <script>
@@ -265,62 +265,35 @@
     const isZalo   = /zalo/i.test(navigator.userAgent);
     const zaloCta  = document.getElementById('zaloCta');
 
-    // —— TÙY CHỈNH CHO ZALO: dùng riêng video, ẩn CTA, bật shield, tự nhảy sau 5s
-    // (1) Nếu mở trong Zalo mobile: dùng video riêng ./data/zalo.mp4 cho cả 2 slide
-    function useZaloVideoForMobile(){
-      const zaloSrc = './data/zalo.mp4';
-      mobVideos.forEach(v => {
-        const srcEl = v.querySelector('source');
-        if (srcEl) {
-          const current = srcEl.getAttribute('src') || '';
-          if (!/\/data\/zalo\.mp4(\?|$)/.test(current)) {
-            srcEl.setAttribute('src', zaloSrc);
-            v.load();
-          }
-        }
-        // đảm bảo inline + muted
-        v.removeAttribute('controls');
-        v.setAttribute('playsinline','');
-        v.setAttribute('webkit-playsinline','');
-        v.setAttribute('muted','');
-        v.muted = true;
-      });
-    }
-
-    // (2) Shield chặn UI video trong Zalo
-    const shields = Array.from(document.querySelectorAll('.mobile-layout .touch-shield'));
-
-    // (3) Khóa seeking & auto play lại nếu bị pause trong Zalo
-    function hardenZaloPlayback(){
-      mobVideos.forEach(v => {
-        let lastTime = 0;
-        v.addEventListener('timeupdate', () => { lastTime = v.currentTime; });
-        v.addEventListener('seeking', () => {
-          try { v.currentTime = lastTime; } catch(_){}
-        });
-        v.addEventListener('pause', () => {
-          v.muted = true;
-          v.play().catch(()=>{});
-        });
-        v.addEventListener('dblclick', e => { e.preventDefault(); }, { passive:false });
-        v.addEventListener('contextmenu', e => { e.preventDefault(); });
-      });
-    }
-
+    // Chỉ sửa hành vi khi mở trong Zalo, mobile khác giữ nguyên
     if (isMobile && isZalo) {
-      // Dùng video riêng cho Zalo
-      useZaloVideoForMobile();
+      // 1) Dùng video riêng ./data/zalo.mp4 cho cả 2 slide mobile
+      (function useZaloVideoForMobile(){
+        const zaloSrc = './data/zalo.mp4';
+        mobVideos.forEach(v => {
+          const srcEl = v.querySelector('source');
+          if (srcEl) {
+            const current = srcEl.getAttribute('src') || '';
+            if (!/\/data\/zalo\.mp4(\?|$)/.test(current)) {
+              srcEl.setAttribute('src', zaloSrc);
+              v.load();
+            }
+          }
+          v.removeAttribute('controls');
+          v.setAttribute('playsinline','');
+          v.setAttribute('webkit-playsinline','');
+          v.setAttribute('muted','');
+          v.muted = true;
+        });
+      })();
 
-      // Ẩn hẳn CTA theo yêu cầu
-      if (zaloCta) zaloCta.style.display = 'none';
+      // 2) Hiện CTA trên Zalo theo yêu cầu
+      if (zaloCta) zaloCta.style.display = 'inline-flex';
 
-      // Bật shield
-      shields.forEach(sh => { sh.style.display = 'block'; });
+      // 3) (Tuỳ chọn) bật shield chống UI native nếu bạn muốn
+      // Array.from(document.querySelectorAll('.mobile-layout .touch-shield')).forEach(sh => sh.style.display = 'block');
 
-      // Cứng playback trong Zalo
-      hardenZaloPlayback();
-
-      // Về trang 1, cố gắng phát video 1 (muted autoplay), SAU 5 GIÂY tự chuyển trang 2
+      // 4) Về Trang 1 và auto phát
       goToPageMobile(1, true);
       const v1 = mobVideos[0];
       if (v1){
@@ -329,7 +302,7 @@
         safePlay(v1);
       }
 
-      // Sau 5s: giả lập bấm nút "next"; nếu không có thì gọi hàm chuyển trang
+      // 5) Sau 5 giây tự sang Trang 2 (ưu tiên click nút next nếu có)
       setTimeout(() => {
         const nextBtn = document.querySelector('.mobile-layout .next-button');
         if (nextBtn) {
@@ -337,17 +310,14 @@
         } else {
           goToPageMobile(2, true);
         }
-        // cố gắng phát video trang 2
         const v2 = mobVideos[1];
         if (v2){
           v2.preload = 'auto';
           safePlay(v2);
         }
       }, 5000);
-    } else {
-      // Không phải Zalo: nếu muốn hiển thị CTA thì bật ở đây
-      // zaloCta?.style.display = 'inline-flex'; // nếu bạn muốn hiện ở mobile thường
     }
+    // ⚠️ Không có else: mobile/desktop ngoài Zalo giữ nguyên hành vi sẵn có
 
     // ===== Mặc định hiển thị trang 1 =====
     goToPageDesktop(1, false);
