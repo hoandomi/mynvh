@@ -130,19 +130,19 @@
 
   <div id="zaloBackdrop" aria-hidden="true"></div>
 
-  <!-- ===== DESKTOP ===== -->
+  
   <div class="desktop-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderDesktop">
         <div class="slide">
           <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
-            <!-- ./data/1pc.mp4 -->
+            
             <source data-obf="AUEPXhpFAE0RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
         <div class="slide">
           <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
-            <!-- ./data/2pc.mp4 -->
+            
             <source data-obf="AUEPXhpFA00RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
@@ -151,52 +151,39 @@
       <button class="next-button" onclick="goToPageDesktop(2, true)">&#10095;</button>
     </div>
   </div>
-
-  <!-- ===== MOBILE ===== -->
   <div class="mobile-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderMobile">
         <div class="slide">
-          <!-- Ngoài Zalo -->
           <video class="mob-video non-zalo" preload="auto" autoplay
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
                  disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
                  data-protect="blob">
-            <!-- ./data/1mobile.mp4 -->
             <source data-obf="BRIdV1BdCxIWWABNEQ1UVU1e" type="video/mp4"/>
           </video>
-          <!-- Zalo riêng -->
           <video class="mob-video zalo-only" preload="auto"
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
                  disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
                  data-protect="blob">
-            <!-- ./data/zalo.mp4 -->
             <source data-obf="TUVcTB8VVEtNEQ1UVU1e" type="video/mp4"/>
           </video>
         </div>
-
         <div class="slide">
           <video class="mob-video" preload="none" poster=""
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
                  disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
                  data-protect="blob">
-            <!-- ./data/2mobile.mp4 -->
             <source data-obf="BRIdV1BdCxIWWANNEQ1UVU1e" type="video/mp4"/>
           </video>
         </div>
       </div>
-
       <button class="button prev-button" onclick="goToPageMobile(1, true)">&#10094;</button>
       <button class="button next-button" onclick="goToPageMobile(2, true)">&#10095;</button>
     </div>
   </div>
-
-  <!-- CTA: text hiển thị ngoài Zalo; trong Zalo chuyển thành ảnh ntubam.png -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">
     Chạm để đến với chuyến bay 15 năm<br>Phucbinh Group
   </button>
-
-  <!-- ====== SCRIPT MÃ HOÁ/GIẢI MÃ + BLOB ====== -->
   <script>
   (function () {
     const KEY = 'pb15y'; // đổi tuỳ ý mỗi lần build
@@ -500,3 +487,4 @@
   </script>
 </body>
 </html>
+
