@@ -171,6 +171,8 @@
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">
     Chạm để đến với chuyến bay 15 năm<br>Phucbinh Group
   </button>
+
+  <!-- ====== SCRIPT OBF/HELPERS (giữ nguyên) ====== -->
   <script>
   (function () {
     const KEY = 'pb15y'; // đổi tuỳ ý mỗi lần build
@@ -295,8 +297,9 @@
   })();
   </script>
 
-  <!-- ====== SCRIPT CHÍNH ====== -->
+  <!-- ====== SCRIPT CHÍNH (ĐÃ FIX MOBILE AUTOPLAY) ====== -->
   <script>
+  (async () => {
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
@@ -317,13 +320,13 @@
 
     // Áp dụng CSS theo chế độ
     if (typeof applyStylesheetsSmart === 'function') {
-      applyStylesheetsSmart(isZalo, document);
+      await applyStylesheetsSmart(isZalo, document);
     }
 
     function resetAll(videos){ videos.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} }); }
     resetAll(deskVideos);
 
-    function goToPageDesktop(page, restart=false){
+    window.goToPageDesktop = function(page, restart=false){
       const offset = (page - 1) * 50;
       if (sliderDesktop) sliderDesktop.style.transform = `translateX(-${offset}%)`;
       resetAll(deskVideos);
@@ -335,6 +338,7 @@
     function playWithGesture(videoEl){
       try{
         videoEl.muted = true;
+        videoEl.setAttribute('muted','');
         videoEl.setAttribute('playsinline','');
         videoEl.setAttribute('webkit-playsinline','');
         const p = videoEl.play();
@@ -354,10 +358,18 @@
     }
 
     function safePlay(videoEl){
-      videoEl.load();
+      // đảm bảo thuộc tính trước khi play (iOS cần)
+      videoEl.muted = true;
+      videoEl.setAttribute('muted','');
+      videoEl.setAttribute('playsinline','');
+      videoEl.setAttribute('webkit-playsinline','');
+
       const go = () => videoEl.play().catch(()=>{});
-      if (videoEl.readyState >= 2) go();
-      else videoEl.addEventListener('canplay', go, { once:true });
+      if (videoEl.readyState >= 2) { go(); }
+      else {
+        videoEl.load();
+        videoEl.addEventListener('canplay', go, { once:true });
+      }
     }
 
     function getMobVideos(){
@@ -376,7 +388,7 @@
     }
 
     // ==== Mobile: phát ngay trong gesture click/touch (hợp Zalo) ====
-    function goToPageMobile(page, restart=false){
+    window.goToPageMobile = function(page, restart=false){
       const videos = getMobVideos();
       const offset = (page - 1) * 50;
       if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
@@ -480,15 +492,19 @@
       zaloBackdrop.addEventListener('touchend', (e) => { e.preventDefault(); zaloCta && zaloCta.click(); }, { passive:false });
     }
 
-    // Khởi tạo nguồn video/CSS theo chế độ:
+    /** =========================
+     *  TRÌNH TỰ KHỞI TẠO MỚI:
+     *  1) Zalo: gán nguồn rõ; Non-Zalo: CHỜ gán blob xong
+     *  2) Desktop set trang 1
+     *  3) Mobile non-Zalo: autoplay v1 ngay sau khi có src
+     ==========================*/
     if (!isZalo && typeof applyObfuscatedVideoSources === 'function') {
-      // có thể giải mã ngay để preload
-      applyObfuscatedVideoSources(document);
+      await applyObfuscatedVideoSources(document); // ⭐ CHỜ set blob src xong
     } else if (isZalo && typeof applyPlainSourcesForZalo === 'function') {
       applyPlainSourcesForZalo(document);
     }
 
-    // ===== MẶC ĐỊNH =====
+    // Mặc định
     goToPageDesktop(1, false);
     setActiveMobile(1);
 
@@ -499,21 +515,33 @@
         v1.muted = true; v1.setAttribute('muted','');
         v1.setAttribute('playsinline',''); v1.setAttribute('webkit-playsinline','');
         v1.preload = 'auto';
+
+        // Giữ trang 1
         if (sliderMobile) sliderMobile.style.transform = 'translateX(0%)';
+
+        // Thử phát ngay sau khi đã có blob src
         const tryPlay = () => v1.play().catch(()=>{});
-        if (v1.readyState >= 2) tryPlay();
-        else { v1.load(); v1.addEventListener('canplay', tryPlay, { once: true }); }
+        if (v1.readyState >= 2) {
+          tryPlay();
+        } else {
+          v1.load();
+          v1.addEventListener('canplay', tryPlay, { once: true });
+        }
+
+        // Tăng độ bền autoplay
+        window.addEventListener('pageshow', () => v1.play().catch(()=>{}), { once:true });
         document.addEventListener('visibilitychange', () => { if (!document.hidden) v1.play().catch(()=>{}); }, { once:true });
         const firstTouchPlay = () => { v1.play().catch(()=>{}); window.removeEventListener('touchend', firstTouchPlay); };
         window.addEventListener('touchend', firstTouchPlay, { passive: true });
       }else{
+        // fallback nếu v1 chưa sẵn
         goToPageMobile(1, false);
       }
     }else{
+      // Zalo hoặc desktop: giữ như cũ
       goToPageMobile(1, false);
     }
+  })();
   </script>
 </body>
 </html>
-
-
