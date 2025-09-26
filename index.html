@@ -39,7 +39,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 9999;
+    z-index: 10001; /* trên backdrop */
     display: none;
     padding: 16px 22px;
     font-size: 18px;
@@ -57,11 +57,28 @@
   }
   #zaloCta:active { transform: translate(-50%, -50%) scale(.98); }
 
+  /* NỀN mờ phía sau CTA (chỉ bật trong Zalo bằng JS) */
+  #zaloBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(2px);
+    z-index: 10000; /* dưới CTA */
+    display: none;
+  }
+
   /* ==== TÁCH CHẾ ĐỘ ZALO ==== */
   .zalo-only { display: none !important; }
   .non-zalo  { display: block !important; }
   body.is-zalo .zalo-only { display: block !important; }
   body.is-zalo .non-zalo  { display: none !important; }
+
+  /* Ẩn 2 nút mũi tên khi là Zalo */
+  body.is-zalo .mobile-layout .button,
+  body.is-zalo .desktop-layout .prev-button,
+  body.is-zalo .desktop-layout .next-button {
+    display: none !important;
+  }
   </style>
 </head>
 
@@ -73,6 +90,9 @@
       <img src="https://phucbinh.com.vn/wp-content/uploads/2023/03/cropped-Group-8-180x180.png" alt="Phucbinh Group">
     </div>
   </div>
+
+  <!-- Backdrop cho nút CTA (chỉ hiển thị trong Zalo bằng JS) -->
+  <div id="zaloBackdrop" aria-hidden="true"></div>
 
   <!-- ===== DESKTOP ===== -->
   <div class="desktop-layout">
@@ -174,17 +194,19 @@
       }
     }
 
-    /* ====== Zalo detect & CTA ====== */
+    /* ====== Zalo detect & CTA/Backdrop ====== */
     const isMobile = /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent);
     const isZalo   = /zalo/i.test(navigator.userAgent);
     const zaloCta  = document.getElementById('zaloCta');
+    const zaloBackdrop = document.getElementById('zaloBackdrop');
 
     // Gắn cờ chế độ Zalo vào body để CSS .zalo-only hoạt động
     if (isZalo) document.body.classList.add('is-zalo');
 
-    // Hiện CTA khi mở trong Zalo trên mobile
+    // Hiện CTA + nền mờ khi mở trong Zalo trên mobile
     if (isMobile && isZalo && zaloCta) {
       zaloCta.style.display = 'inline-flex';
+      if (zaloBackdrop) zaloBackdrop.style.display = 'block';
     }
 
     function playWithGesture(videoEl) {
@@ -278,9 +300,13 @@
         v1.preload = 'auto';
         v1.muted = true;
         playWithGesture(v1);
-        v1.addEventListener('playing', () => { if (zaloCta) zaloCta.style.display = 'none'; }, { once:true });
+        v1.addEventListener('playing', () => {
+          if (zaloCta) zaloCta.style.display = 'none';
+          if (zaloBackdrop) zaloBackdrop.style.display = 'none'; // Ẩn nền khi bắt đầu phát
+        }, { once:true });
       } else {
         if (zaloCta) zaloCta.style.display = 'none';
+        if (zaloBackdrop) zaloBackdrop.style.display = 'none';
       }
 
       // CHỈ auto chuyển trang sau 5s khi KHÔNG phải Zalo
@@ -302,6 +328,11 @@
     if (zaloCta) {
       zaloCta.addEventListener('click', playInviteNow);
       zaloCta.addEventListener('touchend', e => { e.preventDefault(); playInviteNow(); }, { passive:false });
+    }
+    if (zaloBackdrop) {
+      // chạm vào nền cũng kích hoạt CTA cho tiện
+      zaloBackdrop.addEventListener('click', () => zaloCta && zaloCta.click());
+      zaloBackdrop.addEventListener('touchend', (e) => { e.preventDefault(); zaloCta && zaloCta.click(); }, { passive:false });
     }
 
     // ===== MẶC ĐỊNH =====
@@ -348,5 +379,3 @@
 
 </body>
 </html>
-
-
