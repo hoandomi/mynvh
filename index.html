@@ -64,31 +64,25 @@
     50%     { transform: translate(-50%,-50%) scale(1.05); }
   }
 
-  /* ===== Chỉ Zalo: dùng ảnh nút + KHỬ mọi phủ mờ + auto pulse ===== */
-  /* Nút đặt kích thước theo ảnh gốc bạn muốn (1920x1080 theo yêu cầu trước) */
-  body.is-zalo #zaloCta{
-    background: url("./img/nutbam.png") center center / contain no-repeat !important;
-    color: transparent !important;
+  /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse ===== */
+  /* Chỉ trong Zalo: nút đúng kích thước 1920x1080 + pulse liên tục */
+body.is-zalo #zaloCta{
+  background: url("./img/nutbam.png") center center / contain no-repeat;
+  color: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
 
-    /* KHỬ phủ mờ / highlight / đổ bóng / nền… */
-    background-color: transparent !important;
-    box-shadow: none !important;
-    filter: none !important;
-    opacity: 1 !important;
-    mix-blend-mode: normal !important;
-    appearance: none !important;
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent !important;
+  /* Kích thước cố định 1920x1080 như bạn yêu cầu */
+  width: 1920px;
+  height: 1080px;
 
-    padding: 0;
-    border: none;
-    border-radius: 0;
+  /* Không co tự động nữa để đảm bảo đúng size */
+  /* (ĐÃ BỎ max-width và height:auto) */
 
-    width: 1920px;
-    height: 1080px;
+  animation: pulseBtn 1.2s ease-in-out infinite;
+}
 
-    animation: pulseBtn 1.2s ease-in-out infinite; /* tự phồng/thu */
-  }
 
   /* ===== Nút BAY sang phải khi bấm (áp cho chính nút) ===== */
   @keyframes ctaFlyRight {
@@ -98,6 +92,8 @@
   body.is-zalo #zaloCta.flying {
     animation: ctaFlyRight .9s ease-in forwards;
   }
+
+  /* (Không cần hiệu ứng hover riêng trong Zalo nữa) */
 
   /* ==== TÁCH CHẾ ĐỘ ZALO ==== */
   .zalo-only{ display: none !important; }
@@ -109,30 +105,6 @@
   body.is-zalo .mobile-layout .button,
   body.is-zalo .desktop-layout .prev-button,
   body.is-zalo .desktop-layout .next-button{ display: none !important; }
-
-  /* ===== Hiệu ứng chuyển cảnh lướt (light sweep) khi bấm trong Zalo ===== */
-  #zaloTransition{
-    position: fixed; inset: 0;
-    pointer-events: none;
-    z-index: 10000;           /* dưới nút, trên nội dung */
-    display: none;
-    transform: translateX(-110%);
-    background: linear-gradient(90deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,.6) 50%,
-                rgba(255,255,255,0) 100%);
-  }
-  @keyframes sweep {
-    0%   { transform: translateX(-110%); }
-    100% { transform: translateX(110%); }
-  }
-  #zaloTransition.run{
-    display:block;
-    animation: sweep .6s ease-in-out forwards;
-  }
-
-  /* ===== Thêm slide mượt cho cả slider (desktop & mobile) ===== */
-  .slider-wrapper{ transition: transform .6s cubic-bezier(.22,.61,.36,1); }
   </style>
 </head>
 
@@ -144,8 +116,6 @@
   </div>
 
   <div id="zaloBackdrop" aria-hidden="true"></div>
-  <!-- Dải chuyển cảnh lướt khi bấm CTA (Zalo) -->
-  <div id="zaloTransition" aria-hidden="true"></div>
 
   <!-- ===== DESKTOP ===== -->
   <div class="desktop-layout">
@@ -228,7 +198,6 @@
     const isZalo   = /zalo/i.test(navigator.userAgent);
     const zaloCta  = document.getElementById('zaloCta');
     const zaloBackdrop = document.getElementById('zaloBackdrop');
-    const zaloTransition = document.getElementById('zaloTransition');
 
     if (isZalo) document.body.classList.add('is-zalo');
     if (isMobile && isZalo && zaloCta){
@@ -306,25 +275,16 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
-    // Bấm CTA (Zalo): nút bay sang phải + hiệu ứng lướt + phát Trang 1
+    // Bấm CTA: cho cả nút bay sang phải rồi ẩn, sau đó phát Trang 1
     function playInviteNow(){
-      if (isZalo){
-        // chạy light sweep trên toàn màn
-        if (zaloTransition){
-          zaloTransition.classList.add('run');
-          zaloTransition.addEventListener('animationend', () => {
-            zaloTransition.classList.remove('run');
-            zaloTransition.style.display = 'none';
-          }, { once:true });
-        }
-        // thêm class để nút bay sang phải
-        if (zaloCta){
-          zaloCta.classList.add('flying');
-          zaloCta.addEventListener('animationend', () => {
-            zaloCta.style.display = 'none';
-            if (zaloBackdrop) zaloBackdrop.style.display = 'none';
-          }, { once:true });
-        }
+      if (isZalo && zaloCta){
+        // thêm class để chạy animation bay
+        zaloCta.classList.add('flying');
+        // sau khi bay xong thì ẩn nút + backdrop
+        zaloCta.addEventListener('animationend', () => {
+          if (zaloCta) zaloCta.style.display = 'none';
+          if (zaloBackdrop) zaloBackdrop.style.display = 'none';
+        }, { once:true });
       }
 
       // phát video trang 1
@@ -335,6 +295,7 @@
         v1.preload = 'auto';
         v1.muted = true;
         playWithGesture(v1);
+        // fallback: nếu cần ẩn khi video bắt đầu chạy
         v1.addEventListener('playing', () => {
           if (zaloCta) zaloCta.style.display = 'none';
           if (zaloBackdrop) zaloBackdrop.style.display = 'none';
@@ -359,7 +320,6 @@
       }
     }
 
-    const zaloCta = document.getElementById('zaloCta');
     if (zaloCta){
       zaloCta.addEventListener('click', playInviteNow);
       zaloCta.addEventListener('touchend', e => { e.preventDefault(); playInviteNow(); }, { passive:false });
@@ -395,4 +355,3 @@
   </script>
 </body>
 </html>
-
