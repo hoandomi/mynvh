@@ -267,7 +267,9 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
-    // —— CẬP NHẬT: bấm CTA => Trang 1 phát, SAU 5 GIÂY auto chuyển Trang 2
+    // —— Bấm CTA để phát Trang 1.
+    //  Trên Zalo: KHÔNG auto chuyển sang Trang 2.
+    //  Ngoài Zalo: auto chuyển sau 5 giây như cũ.
     function playInviteNow(){
       goToPageMobile(1, true);
       const vids = getMobVideos();
@@ -281,17 +283,20 @@
         if (zaloCta) zaloCta.style.display = 'none';
       }
 
-      setTimeout(() => {
-        const nextBtn = document.querySelector('.mobile-layout .next-button');
-        if (nextBtn) {
-          nextBtn.click();
-        } else {
-          goToPageMobile(2, true);
-          const _vids = getMobVideos();
-          const v2 = _vids[1];
-          if (v2){ v2.preload = 'auto'; safePlay(v2); }
-        }
-      }, 5000);
+      // CHỈ auto chuyển trang sau 5s khi KHÔNG phải Zalo
+      if (!isZalo) {
+        setTimeout(() => {
+          const nextBtn = document.querySelector('.mobile-layout .next-button');
+          if (nextBtn) {
+            nextBtn.click();
+          } else {
+            goToPageMobile(2, true);
+            const _vids = getMobVideos();
+            const v2 = _vids[1];
+            if (v2){ v2.preload = 'auto'; safePlay(v2); }
+          }
+        }, 5000);
+      }
     }
 
     if (zaloCta) {
