@@ -65,23 +65,24 @@
   }
 
   /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse ===== */
-  body.is-zalo #zaloCta{
-    background: url("./img/ntubam.png") center center / contain no-repeat;
-    color: transparent;
-    padding: 0;
-    border: none;
-    border-radius: 0;
+  /* Chỉ trong Zalo: nút đúng kích thước 1920x1080 + pulse liên tục */
+body.is-zalo #zaloCta{
+  background: url("./img/ntubam.png") center center / contain no-repeat;
+  color: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
 
-    /* KÍCH THƯỚC ẢNH GỐC (bạn đang dùng 1920x1080) */
-    width: 1920px;
-    height: 1080px;
+  /* Kích thước cố định 1920x1080 như bạn yêu cầu */
+  width: 1920px;
+  height: 1080px;
 
-    /* Responsive để không tràn màn máy nhỏ */
-    max-width: 95vw;
-    height: auto;
+  /* Không co tự động nữa để đảm bảo đúng size */
+  /* (ĐÃ BỎ max-width và height:auto) */
 
-    animation: pulseBtn 1.2s ease-in-out infinite; /* tự phồng/thu */
-  }
+  animation: pulseBtn 1.2s ease-in-out infinite;
+}
+
 
   /* ===== Nút BAY sang phải khi bấm (áp cho chính nút) ===== */
   @keyframes ctaFlyRight {
@@ -354,3 +355,4 @@
   </script>
 </body>
 </html>
+
