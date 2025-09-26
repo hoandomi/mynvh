@@ -38,7 +38,7 @@
     transform: translate(-50%,-50%);
     z-index: 10001;
     display: none;
-
+    background: #b3b3b3; color: #000;
     max-width: 90vw;
     padding: 14px 16px;
     font-size: 18px; font-weight: 700; line-height: 1.35;
@@ -65,22 +65,35 @@
 
   /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse ===== */
   /* Chỉ trong Zalo: nút đúng kích thước 1920x1080 + pulse liên tục */
+/* Chỉ trong Zalo: hiển thị nút là ảnh, không còn phủ mờ/ám */
 body.is-zalo #zaloCta{
-  background: url("./img/nutbam.png") center center / contain no-repeat;
-  color: transparent;
-  padding: 0;
-  border: none;
-  border-radius: 0;
+  /* Hiển thị đúng ảnh nút */
+  background: url("./img/nutbam.png") center center / contain no-repeat !important;
 
-  /* Kích thước cố định 1920x1080 như bạn yêu cầu */
-  width: 1920px;
-  height: 1080px;
+  /* Khử mọi phủ mờ/ám/hiệu ứng nền của button */
+  background-color: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  appearance: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 
-  /* Không co tự động nữa để đảm bảo đúng size */
-  /* (ĐÃ BỎ max-width và height:auto) */
+  /* Bỏ padding/bo tròn để không ảnh hưởng phần ảnh */
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
 
+  /* Kích thước theo yêu cầu */
+  width: 1920px !important;
+  height: 1080px !important;
+
+  /* Giữ hiệu ứng pulse nếu bạn còn dùng */
   animation: pulseBtn 1.2s ease-in-out infinite;
 }
+
 
 
   /* ===== Nút BAY sang phải khi bấm (áp cho chính nút) ===== */
@@ -354,4 +367,5 @@ body.is-zalo #zaloCta{
   </script>
 </body>
 </html>
+
 
