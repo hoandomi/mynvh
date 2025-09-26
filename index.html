@@ -60,14 +60,13 @@
 
   /* ===== Chỉ Zalo: thay CTA bằng ảnh riêng + hiệu ứng ===== */
   body.is-zalo #zaloCta{
-    /* dùng ảnh nút đã thiết kế */
-    background: url("./img/ntubam.png") center center / contain no-repeat;
-    color: transparent;               /* ẩn chữ, vẫn giữ aria-label */
-    text-shadow: none;
-    padding: 0;                        /* ảnh quyết định kích thước */
-    width: min(90vw, 420px);
-    aspect-ratio: 3.8 / 1;            /* chỉnh tỉ lệ gần giống nút; đổi nếu cần */
-    border-radius: 16px;               /* bo góc nhẹ nếu ảnh trong suốt */
+  background: url("./img/ntubam.png") center center / contain no-repeat;
+  color: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  width: 600px;   
+  height: 150px;
   }
   /* hover phóng/thu ~5% (chỉ Zalo) */
   @keyframes pulseBtn {
@@ -354,3 +353,4 @@
   </script>
 </body>
 </html>
+
