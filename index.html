@@ -135,13 +135,15 @@
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderDesktop">
         <div class="slide">
-          <video class="desk-video" preload="metadata" muted playsinline>
-            <source src="./data/1pc.mp4" type="video/mp4"/>
+          <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
+            <!-- ./data/1pc.mp4 -->
+            <source data-obf="AUEPXhpFAE0RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
         <div class="slide">
-          <video class="desk-video" preload="metadata" muted playsinline>
-            <source src="./data/2pc.mp4" type="video/mp4"/>
+          <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
+            <!-- ./data/2pc.mp4 -->
+            <source data-obf="AUEPXhpFA00RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
       </div>
@@ -158,22 +160,28 @@
           <!-- Ngoài Zalo -->
           <video class="mob-video non-zalo" preload="auto" autoplay
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
-                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
-            <source src="./data/1mobile.mp4" type="video/mp4"/>
+                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
+                 data-protect="blob">
+            <!-- ./data/1mobile.mp4 -->
+            <source data-obf="BRIdV1BdCxIWWABNEQ1UVU1e" type="video/mp4"/>
           </video>
           <!-- Zalo riêng -->
           <video class="mob-video zalo-only" preload="auto"
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
-                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
-            <source src="./data/zalo.mp4" type="video/mp4"/>
+                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
+                 data-protect="blob">
+            <!-- ./data/zalo.mp4 -->
+            <source data-obf="TUVcTB8VVEtNEQ1UVU1e" type="video/mp4"/>
           </video>
         </div>
 
         <div class="slide">
           <video class="mob-video" preload="none" poster=""
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
-                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
-            <source src="./data/2mobile.mp4" type="video/mp4"/>
+                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
+                 data-protect="blob">
+            <!-- ./data/2mobile.mp4 -->
+            <source data-obf="BRIdV1BdCxIWWANNEQ1UVU1e" type="video/mp4"/>
           </video>
         </div>
       </div>
@@ -188,6 +196,102 @@
     Chạm để đến với chuyến bay 15 năm<br>Phucbinh Group
   </button>
 
+  <!-- ====== SCRIPT MÃ HOÁ/GIẢI MÃ + BLOB ====== -->
+  <script>
+  (function () {
+    const KEY = 'pb15y'; // đổi tuỳ ý mỗi lần build
+
+    function xorStr(input, key) {
+      let out = '';
+      for (let i = 0; i < input.length; i++) {
+        out += String.fromCharCode(input.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      return out;
+    }
+    function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
+    function b64d(s){ return decodeURIComponent(escape(atob(s))); }
+
+    // Tạo obf trong console nếu cần
+    window._obfGen = function (url) {
+      const x = xorStr(url, KEY);
+      const rev = x.split('').reverse().join('');
+      return b64e(rev);
+    };
+
+    window._obfGetUrl = function (obf) {
+      try{
+        const rev = b64d(obf);
+        const x = rev.split('').reverse().join('');
+        const url = xorStr(x, KEY);
+        return new URL(url, location.href).toString();
+      }catch(e){
+        return '';
+      }
+    };
+
+    // Fetch → Blob URL để không lộ URL gốc trong DOM
+    async function setVideoSrcViaBlob(videoEl, obf) {
+      try{
+        const url = window._obfGetUrl(obf);
+        // nếu cùng origin có thể bỏ mode/credentials
+        const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error('fetch failed');
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        // xoá <source> để tránh lộ src khi devtools Elements
+        videoEl.querySelectorAll('source').forEach(s => s.remove());
+        videoEl.removeAttribute('src');
+        videoEl.src = blobUrl;
+        videoEl.dataset.blobUrl = blobUrl; // lưu để thu hồi khi cần
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+
+    // Gán src: ưu tiên Blob nếu video có data-protect="blob"
+    window.applyObfuscatedSources = async function (root=document) {
+      const tasks = [];
+
+      // Ưu tiên: video có <source data-obf>
+      root.querySelectorAll('video').forEach(v => {
+        const srcEl = v.querySelector('source[data-obf]');
+        if (!srcEl) return;
+        const obf = srcEl.getAttribute('data-obf');
+        const wantsBlob = v.getAttribute('data-protect') === 'blob';
+
+        if (wantsBlob) {
+          // Thử blob, nếu fail thì fallback gán src thường
+          tasks.push((async () => {
+            const ok = await setVideoSrcViaBlob(v, obf);
+            if (!ok) {
+              const url = window._obfGetUrl(obf);
+              if (url) {
+                srcEl.setAttribute('src', url);
+                v.load();
+              }
+            }
+          })());
+        } else {
+          // gán trực tiếp (đã mã hoá)
+          const url = window._obfGetUrl(obf);
+          if (url) srcEl.setAttribute('src', url);
+        }
+      });
+
+      await Promise.allSettled(tasks);
+    };
+
+    // Thu hồi blob khi rời trang (tránh rò rỉ bộ nhớ)
+    window.addEventListener('beforeunload', () => {
+      document.querySelectorAll('video[data-blob-url]').forEach(v => {
+        try { URL.revokeObjectURL(v.dataset.blobUrl); } catch(_){}
+      });
+    });
+  })();
+  </script>
+
+  <!-- ====== SCRIPT CHÍNH (giữ nguyên, chỉ chèn applyObfuscatedSources) ====== -->
   <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
@@ -292,14 +396,18 @@
       resetAll(deskVideos);
       const mobVideosNow = getMobVideos();
       mobVideosNow.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} });
+
       [...deskVideos, ...mobVideosNow].forEach(v => {
-        const srcEl = v.querySelector('source'); if (!srcEl) return;
+        // Nếu dùng Blob, bỏ qua cache-buster vì không còn <source src>
+        const srcEl = v.querySelector('source'); 
+        if (!srcEl) return;
         try{
           const url = new URL(srcEl.getAttribute('src'), location.href);
           url.searchParams.set('_r', Date.now().toString());
           srcEl.setAttribute('src', url.toString()); v.load();
         }catch(e){ v.load(); }
       });
+
       let done = false;
       const off = () => { if (!done){ done = true; overlay.classList.remove('show'); } };
       setTimeout(off, 3000);
@@ -307,8 +415,8 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
-    // Bấm CTA: cho cả nút bay sang phải rồi ẩn, sau đó phát Trang 1
-    function playInviteNow(){
+    // Bấm CTA: giải mã + Blob sau khi user tương tác (tăng chống check)
+    async function playInviteNow(){
       if (isZalo && zaloCta){
         zaloCta.classList.add('flying');
         zaloCta.addEventListener('animationend', () => {
@@ -316,6 +424,9 @@
           if (zaloBackdrop) zaloBackdrop.style.display = 'none';
         }, { once:true });
       }
+
+      // Chỉ giải mã/gán src (Blob) khi user bấm – chống crawler tĩnh
+      await applyObfuscatedSources(document);
 
       // phát video trang 1
       goToPageMobile(1, true);
@@ -334,7 +445,7 @@
         if (zaloBackdrop) zaloBackdrop.style.display = 'none';
       }
 
-      // Ngoài Zalo: vẫn auto sang trang 2 sau 5s
+      // Ngoài Zalo: auto sang trang 2 sau 5s
       if (!isZalo) {
         setTimeout(() => {
           const nextBtn = document.querySelector('.mobile-layout .next-button');
@@ -357,6 +468,8 @@
       zaloBackdrop.addEventListener('click', () => zaloCta && zaloCta.click());
       zaloBackdrop.addEventListener('touchend', (e) => { e.preventDefault(); zaloCta && zaloCta.click(); }, { passive:false });
     }
+
+    applyObfuscatedSources(document);
 
     // ===== MẶC ĐỊNH =====
     goToPageDesktop(1, false);
@@ -387,6 +500,3 @@
   </script>
 </body>
 </html>
-
-
-
