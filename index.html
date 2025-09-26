@@ -18,9 +18,9 @@
   <meta property="og:image:secure_url" content="https://i.pinimg.com/736x/7b/ba/16/7bba16221be6308721a09eefffc13ab3.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <link rel="stylesheet" href="./css/common.css">
-  <link rel="stylesheet" href="./css/desktop.css">
-  <link rel="stylesheet" href="./css/mobile.css">
+  <link rel="stylesheet" rel="stylesheet" data-src="./css/common.css"  data-obf="" />
+  <link rel="stylesheet" rel="stylesheet" data-src="./css/desktop.css" data-obf="" />
+  <link rel="stylesheet" rel="stylesheet" data-src="./css/mobile.css"  data-obf="" />
 
   <style>
   .mob-video::-webkit-media-controls,
@@ -28,8 +28,6 @@
 
   #overlayReload { display:none; }
   #overlayReload.show { display:flex; }
-
-  /* ===== CTA cơ bản (ngoài Zalo giữ text) ===== */
   #zaloCta{
     position: fixed;
     top: 50%; left: 50%;
@@ -128,19 +126,19 @@
 
   <div id="zaloBackdrop" aria-hidden="true"></div>
 
-  
+  <!-- ===== DESKTOP ===== -->
   <div class="desktop-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderDesktop">
         <div class="slide">
           <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
-            
+            <!-- ./data/1pc.mp4 -->
             <source data-obf="AUEPXhpFAE0RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
         <div class="slide">
           <video class="desk-video" preload="metadata" muted playsinline data-protect="blob">
-            
+            <!-- ./data/2pc.mp4 -->
             <source data-obf="AUEPXhpFA00RDVRVTV4=" type="video/mp4"/>
           </video>
         </div>
@@ -149,6 +147,8 @@
       <button class="next-button" onclick="goToPageDesktop(2, true)">&#10095;</button>
     </div>
   </div>
+
+  <!-- ===== MOBILE ===== -->
   <div class="mobile-layout">
     <div class="slider-container">
       <div class="slider-wrapper" id="sliderMobile">
@@ -161,11 +161,11 @@
           </video>
           <video class="mob-video zalo-only" preload="auto"
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
-                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
-                 data-protect="blob">
-            <source data-obf="TUVcTB8VVEtNEQ1UVU1e" type="video/mp4"/>
+                 disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen noremoteplayback">
+            <source data-src="./data/zalo.mp4" type="video/mp4"/>
           </video>
         </div>
+
         <div class="slide">
           <video class="mob-video" preload="none" poster=""
                  muted playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5"
@@ -175,13 +175,18 @@
           </video>
         </div>
       </div>
+
       <button class="button prev-button" onclick="goToPageMobile(1, true)">&#10094;</button>
       <button class="button next-button" onclick="goToPageMobile(2, true)">&#10095;</button>
     </div>
   </div>
+
+  <!-- CTA -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">
     Chạm để đến với chuyến bay 15 năm<br>Phucbinh Group
   </button>
+
+  <!-- ====== SCRIPT MÃ HOÁ/GIẢI MÃ + VIDEO BLOB ====== -->
   <script>
   (function () {
     const KEY = 'pb15y'; // đổi tuỳ ý mỗi lần build
@@ -196,7 +201,7 @@
     function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
     function b64d(s){ return decodeURIComponent(escape(atob(s))); }
 
-    // Tạo obf trong console nếu cần
+    // Console helper nếu muốn tự gen thêm obf
     window._obfGen = function (url) {
       const x = xorStr(url, KEY);
       const rev = x.split('').reverse().join('');
@@ -214,31 +219,27 @@
       }
     };
 
-    // Fetch → Blob URL để không lộ URL gốc trong DOM
+    // Fetch → Blob URL để không lộ URL gốc trong DOM (video)
     async function setVideoSrcViaBlob(videoEl, obf) {
       try{
         const url = window._obfGetUrl(obf);
-        // nếu cùng origin có thể bỏ mode/credentials
         const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
         if (!res.ok) throw new Error('fetch failed');
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
-        // xoá <source> để tránh lộ src khi devtools Elements
         videoEl.querySelectorAll('source').forEach(s => s.remove());
         videoEl.removeAttribute('src');
         videoEl.src = blobUrl;
-        videoEl.dataset.blobUrl = blobUrl; // lưu để thu hồi khi cần
+        videoEl.dataset.blobUrl = blobUrl;
         return true;
       }catch(e){
         return false;
       }
     }
 
-    // Gán src: ưu tiên Blob nếu video có data-protect="blob"
-    window.applyObfuscatedSources = async function (root=document) {
+    // Gán src video: ưu tiên Blob nếu video có data-protect="blob"
+    window.applyObfuscatedVideoSources = async function (root=document) {
       const tasks = [];
-
-      // Ưu tiên: video có <source data-obf>
       root.querySelectorAll('video').forEach(v => {
         const srcEl = v.querySelector('source[data-obf]');
         if (!srcEl) return;
@@ -246,43 +247,94 @@
         const wantsBlob = v.getAttribute('data-protect') === 'blob';
 
         if (wantsBlob) {
-          // Thử blob, nếu fail thì fallback gán src thường
           tasks.push((async () => {
             const ok = await setVideoSrcViaBlob(v, obf);
             if (!ok) {
               const url = window._obfGetUrl(obf);
-              if (url) {
-                srcEl.setAttribute('src', url);
-                v.load();
-              }
+              if (url) { srcEl.setAttribute('src', url); v.load(); }
             }
           })());
         } else {
-          // gán trực tiếp (đã mã hoá)
           const url = window._obfGetUrl(obf);
           if (url) srcEl.setAttribute('src', url);
         }
       });
-
       await Promise.allSettled(tasks);
     };
 
-    // Thu hồi blob khi rời trang (tránh rò rỉ bộ nhớ)
-    window.addEventListener('beforeunload', () => {
-      document.querySelectorAll('video[data-blob-url]').forEach(v => {
-        try { URL.revokeObjectURL(v.dataset.blobUrl); } catch(_){}
+    // Zalo: gán URL rõ (data-src) cho các nguồn giữ nguyên
+    window.applyPlainSourcesForZalo = function (root=document) {
+      // video zalo-only
+      root.querySelectorAll('video.zalo-only source[data-src]').forEach(s => {
+        const url = s.getAttribute('data-src');
+        if (url) s.setAttribute('src', url);
       });
-    });
+      // CSS dùng data-src
+      root.querySelectorAll('link[rel="stylesheet"][data-src]').forEach(l => {
+        const url = l.getAttribute('data-src');
+        if (url) l.setAttribute('href', url);
+      });
+    };
+
+    // ===== CSS LOADER (Blob/obf ngoài Zalo; plain khi Zalo) =====
+    async function setStylesheetViaBlob(linkEl, url) {
+      try {
+        const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error('fetch css failed');
+        const css = await res.text();
+        const blob = new Blob([css], { type: 'text/css' });
+        const blobUrl = URL.createObjectURL(blob);
+        linkEl.setAttribute('href', blobUrl);
+        linkEl.dataset.blobUrl = blobUrl;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    window.applyStylesheetsSmart = async function (isZalo, root=document) {
+      if (isZalo) {
+        // Zalo: href = data-src (URL rõ)
+        window.applyPlainSourcesForZalo(root);
+        return;
+      }
+      // Ngoài Zalo:
+      const tasks = [];
+      root.querySelectorAll('link[rel="stylesheet"][data-src]').forEach(l => {
+        const obf = l.getAttribute('data-obf') || '';
+        const url = obf ? window._obfGetUrl(obf) : new URL(l.getAttribute('data-src'), location.href).toString();
+        if (!url) return;
+        tasks.push(setStylesheetViaBlob(l, url).then(ok => {
+          if (!ok) l.setAttribute('href', url); // fallback: lộ URL nếu fetch bị CORS chặn
+        }));
+      });
+      await Promise.allSettled(tasks);
+    };
   })();
   </script>
 
-  <!-- ====== SCRIPT CHÍNH (giữ nguyên, chỉ chèn applyObfuscatedSources) ====== -->
+  <!-- ====== SCRIPT CHÍNH ====== -->
   <script>
     const sliderDesktop = document.getElementById("sliderDesktop");
     const sliderMobile  = document.getElementById("sliderMobile");
     const overlay       = document.getElementById("overlayReload");
 
     const deskVideos = Array.from(document.querySelectorAll(".desk-video"));
+
+    const isMobile = /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isZalo   = /zalo/i.test(navigator.userAgent);
+
+    const zaloCta  = document.getElementById('zaloCta');
+    const zaloBackdrop = document.getElementById('zaloBackdrop');
+
+    if (isZalo) document.body.classList.add('is-zalo');
+    if (isMobile && isZalo && zaloCta){
+      zaloCta.style.display = 'inline-flex';
+      if (zaloBackdrop) zaloBackdrop.style.display = 'block';
+    }
+
+    // Áp dụng CSS theo chế độ
+    if (typeof applyStylesheetsSmart === 'function') {
+      applyStylesheetsSmart(isZalo, document);
+    }
 
     function resetAll(videos){ videos.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} }); }
     resetAll(deskVideos);
@@ -294,17 +346,6 @@
       const idx = page - 1;
       const target = deskVideos[idx];
       if (target){ if (restart) target.currentTime = 0; safePlay(target); }
-    }
-
-    const isMobile = /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isZalo   = /zalo/i.test(navigator.userAgent);
-    const zaloCta  = document.getElementById('zaloCta');
-    const zaloBackdrop = document.getElementById('zaloBackdrop');
-
-    if (isZalo) document.body.classList.add('is-zalo');
-    if (isMobile && isZalo && zaloCta){
-      zaloCta.style.display = 'inline-flex';
-      if (zaloBackdrop) zaloBackdrop.style.display = 'block';
     }
 
     function playWithGesture(videoEl){
@@ -383,7 +424,6 @@
       mobVideosNow.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} });
 
       [...deskVideos, ...mobVideosNow].forEach(v => {
-        // Nếu dùng Blob, bỏ qua cache-buster vì không còn <source src>
         const srcEl = v.querySelector('source'); 
         if (!srcEl) return;
         try{
@@ -400,7 +440,7 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
-    // Bấm CTA: giải mã + Blob sau khi user tương tác (tăng chống check)
+    // Bấm CTA: (Zalo giữ nguyên), ngoài Zalo: giải mã + Blob sau tương tác
     async function playInviteNow(){
       if (isZalo && zaloCta){
         zaloCta.classList.add('flying');
@@ -410,8 +450,11 @@
         }, { once:true });
       }
 
-      // Chỉ giải mã/gán src (Blob) khi user bấm – chống crawler tĩnh
-      await applyObfuscatedSources(document);
+      if (!isZalo && typeof applyObfuscatedVideoSources === 'function') {
+        await applyObfuscatedVideoSources(document);
+      } else if (isZalo && typeof applyPlainSourcesForZalo === 'function') {
+        applyPlainSourcesForZalo(document);
+      }
 
       // phát video trang 1
       goToPageMobile(1, true);
@@ -430,7 +473,6 @@
         if (zaloBackdrop) zaloBackdrop.style.display = 'none';
       }
 
-      // Ngoài Zalo: auto sang trang 2 sau 5s
       if (!isZalo) {
         setTimeout(() => {
           const nextBtn = document.querySelector('.mobile-layout .next-button');
@@ -454,12 +496,16 @@
       zaloBackdrop.addEventListener('touchend', (e) => { e.preventDefault(); zaloCta && zaloCta.click(); }, { passive:false });
     }
 
-    applyObfuscatedSources(document);
+    // Khởi tạo nguồn video/CSS theo chế độ:
+    if (!isZalo && typeof applyObfuscatedVideoSources === 'function') {
+      // có thể giải mã ngay để preload
+      applyObfuscatedVideoSources(document);
+    } else if (isZalo && typeof applyPlainSourcesForZalo === 'function') {
+      applyPlainSourcesForZalo(document);
+    }
 
     // ===== MẶC ĐỊNH =====
     goToPageDesktop(1, false);
-
-    // Đặt slide 1 là active khi load (để có hiệu ứng ngay trong Zalo)
     setActiveMobile(1);
 
     if (isMobile && !isZalo){
@@ -485,5 +531,3 @@
   </script>
 </body>
 </html>
-
-
