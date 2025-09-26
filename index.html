@@ -63,49 +63,35 @@
     50%     { transform: translate(-50%,-50%) scale(1.05); }
   }
 
-  /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse ===== */
-  /* Chỉ trong Zalo: nút đúng kích thước 1920x1080 + pulse liên tục */
-/* Chỉ trong Zalo: hiển thị nút là ảnh, không còn phủ mờ/ám */
-body.is-zalo #zaloCta{
-  /* Hiển thị đúng ảnh nút */
-  background: url("./img/nutbam.png") center center / contain no-repeat !important;
+  /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse và KHÔNG phủ mờ ===== */
+  body.is-zalo #zaloCta{
+    background: url("./img/nutbam.png") center center / contain no-repeat !important;
+    background-color: transparent !important;
+    color: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    appearance: none !important;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
 
-  /* Khử mọi phủ mờ/ám/hiệu ứng nền của button */
-  background-color: transparent !important;
-  color: transparent !important;
-  box-shadow: none !important;
-  filter: none !important;
-  opacity: 1 !important;
-  mix-blend-mode: normal !important;
-  appearance: none !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
 
-  /* Bỏ padding/bo tròn để không ảnh hưởng phần ảnh */
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
+    width: 1920px !important;
+    height: 1080px !important;
 
-  /* Kích thước theo yêu cầu */
-  width: 1920px !important;
-  height: 1080px !important;
-
-  /* Giữ hiệu ứng pulse nếu bạn còn dùng */
-  animation: pulseBtn 1.2s ease-in-out infinite;
-}
-
-
+    animation: pulseBtn 1.2s ease-in-out infinite;
+  }
 
   /* ===== Nút BAY sang phải khi bấm (áp cho chính nút) ===== */
   @keyframes ctaFlyRight {
     0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
     100% { transform: translate(150vw,-50%) rotate(6deg) scale(1); opacity: 0; }
   }
-  body.is-zalo #zaloCta.flying {
-    animation: ctaFlyRight .9s ease-in forwards;
-  }
-
-  /* (Không cần hiệu ứng hover riêng trong Zalo nữa) */
+  body.is-zalo #zaloCta.flying { animation: ctaFlyRight .9s ease-in forwards; }
 
   /* ==== TÁCH CHẾ ĐỘ ZALO ==== */
   .zalo-only{ display: none !important; }
@@ -117,6 +103,21 @@ body.is-zalo #zaloCta{
   body.is-zalo .mobile-layout .button,
   body.is-zalo .desktop-layout .prev-button,
   body.is-zalo .desktop-layout .next-button{ display: none !important; }
+
+  /* ==== Hiệu ứng chuyển trang CHỈ trong Zalo ==== */
+  body.is-zalo #sliderMobile {
+    transition: transform 700ms cubic-bezier(.22,.61,.36,1);
+  }
+  body.is-zalo #sliderMobile .slide {
+    opacity: .35;
+    transform: scale(.985);
+    transition: opacity 600ms ease, transform 600ms ease;
+    will-change: opacity, transform;
+  }
+  body.is-zalo #sliderMobile .slide.active {
+    opacity: 1;
+    transform: scale(1);
+  }
   </style>
 </head>
 
@@ -250,16 +251,35 @@ body.is-zalo #zaloCta{
                   .filter(v => v.offsetParent !== null);
     }
 
+    /* ===== Hiệu ứng chuyển trang: đánh dấu slide active (chỉ áp dụng trong Zalo) ===== */
+    const slidesMobile = Array.from(document.querySelectorAll('#sliderMobile .slide'));
+    function setActiveMobile(page){
+      if (!isZalo) return;
+      slidesMobile.forEach((s, i) => {
+        if (i === (page - 1)) s.classList.add('active');
+        else s.classList.remove('active');
+      });
+    }
+
+    // ==== Mobile: phát ngay trong gesture click/touch (hợp Zalo) ====
     function goToPageMobile(page, restart=false){
       const videos = getMobVideos();
       const offset = (page - 1) * 50;
       if (sliderMobile) sliderMobile.style.transform = `translateX(-${offset}%)`;
+
+      // hiệu ứng chuyển trang (chỉ Zalo)
+      setActiveMobile(page);
+
+      // reset chỉ những video hiển thị
       videos.forEach(v => { try{ v.pause(); v.currentTime = 0; }catch(e){} });
+
       const idx = page - 1;
       const target = videos[idx];
       if (!target) return;
+
       target.preload = 'auto';
       if (restart) target.currentTime = 0;
+
       safePlay(target);
     }
 
@@ -290,9 +310,7 @@ body.is-zalo #zaloCta{
     // Bấm CTA: cho cả nút bay sang phải rồi ẩn, sau đó phát Trang 1
     function playInviteNow(){
       if (isZalo && zaloCta){
-        // thêm class để chạy animation bay
         zaloCta.classList.add('flying');
-        // sau khi bay xong thì ẩn nút + backdrop
         zaloCta.addEventListener('animationend', () => {
           if (zaloCta) zaloCta.style.display = 'none';
           if (zaloBackdrop) zaloBackdrop.style.display = 'none';
@@ -307,7 +325,6 @@ body.is-zalo #zaloCta{
         v1.preload = 'auto';
         v1.muted = true;
         playWithGesture(v1);
-        // fallback: nếu cần ẩn khi video bắt đầu chạy
         v1.addEventListener('playing', () => {
           if (zaloCta) zaloCta.style.display = 'none';
           if (zaloBackdrop) zaloBackdrop.style.display = 'none';
@@ -344,6 +361,9 @@ body.is-zalo #zaloCta{
     // ===== MẶC ĐỊNH =====
     goToPageDesktop(1, false);
 
+    // Đặt slide 1 là active khi load (để có hiệu ứng ngay trong Zalo)
+    setActiveMobile(1);
+
     if (isMobile && !isZalo){
       const vids = getMobVideos();
       const v1 = vids[0];
@@ -367,5 +387,3 @@ body.is-zalo #zaloCta{
   </script>
 </body>
 </html>
-
-
