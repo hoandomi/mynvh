@@ -82,7 +82,7 @@
 
     width: 1920px !important;
     height: 1080px !important;
-    transition: transform 0.8s ease-in-out;
+  
     animation: pulseBtn 1.2s ease-in-out infinite;
   }
 
@@ -106,6 +106,7 @@
 
   /* ==== Hiệu ứng chuyển trang CHỈ trong Zalo ==== */
   body.is-zalo #sliderMobile {
+    transition: transform 0.8s ease-in-out; 
     transition: transform 700ms cubic-bezier(.22,.61,.36,1);
   }
   body.is-zalo #sliderMobile .slide {
@@ -387,4 +388,5 @@
   </script>
 </body>
 </html>
+
 
