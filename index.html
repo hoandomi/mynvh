@@ -31,7 +31,7 @@
   #overlayReload { display:none; }
   #overlayReload.show { display:flex; }
 
-  /* ===== CTA Zalo (cơ bản, dùng text khi ngoài Zalo) ===== */
+  /* ===== CTA cơ bản (ngoài Zalo giữ text) ===== */
   #zaloCta{
     position: fixed;
     top: 50%; left: 50%;
@@ -52,43 +52,47 @@
   }
   #zaloCta:active{ transform: translate(-50%,-50%) scale(.98); }
 
-  /* ===== Backdrop sau CTA (chỉ bật trong Zalo bằng JS) ===== */
+  /* ===== Backdrop sau CTA (hiện trong Zalo bằng JS) ===== */
   #zaloBackdrop{
     position: fixed; inset: 0; z-index: 10000; display: none;
     background: url("./img/zalo-bg.jpg") center center / cover no-repeat;
   }
 
-  /* ===== Chỉ Zalo: thay CTA bằng ảnh riêng + hiệu ứng ===== */
-  body.is-zalo #zaloCta{
-  background: url("./img/ntubam.png") center center / contain no-repeat;
-  color: transparent;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  width: 1920px;   
-  height: 1080px;
-  }
-  /* hover phóng/thu ~5% (chỉ Zalo) */
+  /* ===== Hiệu ứng PULSE mặc định (tự chạy) cho Zalo ===== */
   @keyframes pulseBtn {
     0%,100% { transform: translate(-50%,-50%) scale(1); }
     50%     { transform: translate(-50%,-50%) scale(1.05); }
   }
-  body.is-zalo #zaloCta:hover { animation: pulseBtn 1.2s ease-in-out infinite; }
-  body.is-zalo #zaloCta:focus-visible { animation: pulseBtn 1.2s ease-in-out infinite; outline: none; }
 
-  /* Biểu tượng máy bay bên trong nút (để bay khi click) */
-  #zaloCta .plane{
-    position: absolute; right: 10%; top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.2em;
-    pointer-events: none;
+  /* ===== Chỉ Zalo: dùng ảnh nút + auto pulse ===== */
+  body.is-zalo #zaloCta{
+    background: url("./img/ntubam.png") center center / contain no-repeat;
+    color: transparent;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+
+    /* KÍCH THƯỚC ẢNH GỐC (bạn đang dùng 1920x1080) */
+    width: 1920px;
+    height: 1080px;
+
+    /* Responsive để không tràn màn máy nhỏ */
+    max-width: 95vw;
+    height: auto;
+
+    animation: pulseBtn 1.2s ease-in-out infinite; /* tự phồng/thu */
   }
-  /* Animation máy bay bay sang phải */
-  @keyframes flyRight {
-    0%   { transform: translateY(-50%) translateX(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(-50%) translateX(120vw) rotate(12deg); opacity: 0; }
+
+  /* ===== Nút BAY sang phải khi bấm (áp cho chính nút) ===== */
+  @keyframes ctaFlyRight {
+    0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(150vw,-50%) rotate(6deg) scale(1); opacity: 0; }
   }
-  body.is-zalo #zaloCta.flying .plane{ animation: flyRight .9s ease-in forwards; }
+  body.is-zalo #zaloCta.flying {
+    animation: ctaFlyRight .9s ease-in forwards;
+  }
+
+  /* (Không cần hiệu ứng hover riêng trong Zalo nữa) */
 
   /* ==== TÁCH CHẾ ĐỘ ZALO ==== */
   .zalo-only{ display: none !important; }
@@ -168,7 +172,6 @@
   <!-- CTA: text hiển thị ngoài Zalo; trong Zalo chuyển thành ảnh ntubam.png -->
   <button id="zaloCta" type="button" aria-label="Xem thiệp mời">
     Chạm để đến với chuyến bay 15 năm<br>Phucbinh Group
-    <span class="plane" aria-hidden="true">✈</span>
   </button>
 
   <script>
@@ -271,18 +274,16 @@
       if (anyVideo) anyVideo.addEventListener('loadeddata', off, { once:true });
     }
 
-    // Bấm CTA: máy bay bay sang phải, rồi phát Trang 1
+    // Bấm CTA: cho cả nút bay sang phải rồi ẩn, sau đó phát Trang 1
     function playInviteNow(){
-      // trigger animation máy bay
       if (isZalo && zaloCta){
+        // thêm class để chạy animation bay
         zaloCta.classList.add('flying');
-        const plane = zaloCta.querySelector('.plane');
-        if (plane){
-          plane.addEventListener('animationend', () => {
-            if (zaloCta) zaloCta.style.display = 'none';
-            if (zaloBackdrop) zaloBackdrop.style.display = 'none';
-          }, { once:true });
-        }
+        // sau khi bay xong thì ẩn nút + backdrop
+        zaloCta.addEventListener('animationend', () => {
+          if (zaloCta) zaloCta.style.display = 'none';
+          if (zaloBackdrop) zaloBackdrop.style.display = 'none';
+        }, { once:true });
       }
 
       // phát video trang 1
@@ -293,7 +294,7 @@
         v1.preload = 'auto';
         v1.muted = true;
         playWithGesture(v1);
-        // fallback ẩn CTA khi video chạy
+        // fallback: nếu cần ẩn khi video bắt đầu chạy
         v1.addEventListener('playing', () => {
           if (zaloCta) zaloCta.style.display = 'none';
           if (zaloBackdrop) zaloBackdrop.style.display = 'none';
@@ -303,8 +304,8 @@
         if (zaloBackdrop) zaloBackdrop.style.display = 'none';
       }
 
-      // KHÔNG auto sang trang 2 trong Zalo (đã xử lý trước đó)
-      if (!isZalo){
+      // Ngoài Zalo: vẫn auto sang trang 2 sau 5s
+      if (!isZalo) {
         setTimeout(() => {
           const nextBtn = document.querySelector('.mobile-layout .next-button');
           if (nextBtn) nextBtn.click();
@@ -353,5 +354,3 @@
   </script>
 </body>
 </html>
-
-
